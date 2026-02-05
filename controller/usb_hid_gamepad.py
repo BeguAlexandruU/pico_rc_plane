@@ -17,7 +17,7 @@ def send_usb_message():
     jx1, jy1, jx2, jy2 = controller.get_axis()
     
     # 2. Update movement
-    gp.move_joysticks(x=jy1, y=jx1*-1, z=jy2*-1, r_z=jx2*-1)
+    gp.move_joysticks(x=jx1, y=jy1*-1, z=jx2*-1, r_z=jy2*-1)
 
     # 3. Handle Buttons
     while True:

@@ -3,8 +3,8 @@ import analogio
 import digitalio
 import keypad
 
-X1_MIN, X1_MAX = 8000, 58000 
-Y1_MIN, Y1_MAX = 8000, 57000
+X1_MIN, X1_MAX = 8000, 57000 
+Y1_MIN, Y1_MAX = 8000, 58000
 X2_MIN, X2_MAX = 8000, 58000
 Y2_MIN, Y2_MAX = 8000, 58000
 CENTER_VAL = 32768
@@ -41,10 +41,10 @@ def setup():
     global keys
     
     # Initialize Joysticks
-    ax1 = analogio.AnalogIn(board.GP29)
-    ay1 = analogio.AnalogIn(board.GP27)
-    ax2 = analogio.AnalogIn(board.GP26)
-    ay2 = analogio.AnalogIn(board.GP28)
+    ax1 = analogio.AnalogIn(board.GP27)
+    ay1 = analogio.AnalogIn(board.GP29)
+    ax2 = analogio.AnalogIn(board.GP28)
+    ay2 = analogio.AnalogIn(board.GP26)
     
     # Initialize Buttons
     buttons = (board.GP3, board.GP15, board.GP5, board.GP6, board.GP14, board.GP7, board.GP4, board.GP2)
