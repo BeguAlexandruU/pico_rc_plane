@@ -17,8 +17,8 @@ def setup():
     fusion = Fusion()
     
     # debug timing test
-    accel = fusion.accel.xyz
-    gyro = fusion.gyro.xyz
+    accel = imu_sensor.accel.xyz
+    gyro = imu_sensor.gyro.xyz
     start = time.ticks_us()  # Measure computation time only
     fusion.update_nomag(accel, gyro) # 979μs on Pyboard
     t = time.ticks_diff(time.ticks_us(), start)

@@ -50,7 +50,7 @@ def update():
         
         # Unpack RC Channels
         try:
-            ch1, ch2, ch3, ch4 = struct.unpack("<iiii", data)
+            ch1, ch2, ch3, ch4 = struct.unpack("<BBBB", data)
             # print("Received Channels:", ch1, ch2, ch3, ch4)
             # Use channel[0], channel[1] etc for servos/motors
             
