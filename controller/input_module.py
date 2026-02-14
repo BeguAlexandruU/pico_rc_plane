@@ -51,17 +51,16 @@ def setup():
     keys = keypad.Keys(buttons, value_when_pressed=False, pull=True)
 
 def map_axis(raw_val, v_min, v_max, out_min=-127, out_max=127):
-    # 1. Clip the value so it doesn't go outside your measured bounds
+    # 1. Clip the value to the physical bounds
     raw_val = max(v_min, min(v_max, raw_val))
     
     # 2. Check for deadzone around center
     if abs(raw_val - CENTER_VAL) < DEADZONE:
-        return 0
+        return (out_min + out_max) // 2
         
-    # 3. Map the measured range to out_min to out_max
-    # Formula: (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    # 3. Linear Mapping Formula
+    # (val - in_min) * (out_range) / (in_range) + out_min
     mapped = (raw_val - v_min) * (out_max - out_min) / (v_max - v_min) + out_min
-    
     return int(mapped)
 
 def get_axis_b_format():
