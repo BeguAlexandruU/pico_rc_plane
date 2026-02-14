@@ -66,10 +66,10 @@ def send_message():
     global nrf
     global packets_sent, packets_success, start_time # debug
     
-    jx1, jy1, jx2, jy2 = controller.get_axis()
+    jx1, jy1, jx2, jy2 = controller.get_axis_B_format()
     if armed:
         jy1 = 0
-    payload = struct.pack("<iiii", jx1, jy1, jx2, jy2) 
+    payload = struct.pack("<BBBB", jx1, jy1, jx2, jy2) 
     
     result = nrf.send(payload)
     packets_sent += 1

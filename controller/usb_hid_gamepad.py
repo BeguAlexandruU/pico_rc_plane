@@ -14,7 +14,7 @@ def send_usb_message():
     global gp
     
     # 1. Read Joysticks with Deadzone
-    jx1, jy1, jx2, jy2 = controller.get_axis()
+    jx1, jy1, jx2, jy2 = controller.get_axis_b_format()
     
     # 2. Update movement
     gp.move_joysticks(x=jx1, y=jy1*-1, z=jx2*-1, r_z=jy2*-1)

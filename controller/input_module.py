@@ -50,7 +50,7 @@ def setup():
     buttons = (board.GP3, board.GP15, board.GP5, board.GP6, board.GP14, board.GP7, board.GP4, board.GP2)
     keys = keypad.Keys(buttons, value_when_pressed=False, pull=True)
 
-def calibrate_axis(raw_val, v_min, v_max):
+def map_axis(raw_val, v_min, v_max, out_min=-127, out_max=127):
     # 1. Clip the value so it doesn't go outside your measured bounds
     raw_val = max(v_min, min(v_max, raw_val))
     
@@ -58,18 +58,27 @@ def calibrate_axis(raw_val, v_min, v_max):
     if abs(raw_val - CENTER_VAL) < DEADZONE:
         return 0
         
-    # 3. Map the measured range to -127 to 127
+    # 3. Map the measured range to out_min to out_max
     # Formula: (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-    mapped = (raw_val - v_min) * (127 - (-127)) / (v_max - v_min) + (-127)
+    mapped = (raw_val - v_min) * (out_max - out_min) / (v_max - v_min) + out_min
     
     return int(mapped)
 
-def get_axis():
+def get_axis_b_format():
     global ax1, ay1, ax2, ay2
-    jx1 = calibrate_axis(ax1.value, X1_MIN, X1_MAX)
-    jy1 = calibrate_axis(ay1.value, Y1_MIN, Y1_MAX)
-    jx2 = calibrate_axis(ax2.value, X2_MIN, X2_MAX)
-    jy2 = calibrate_axis(ay2.value, Y2_MIN, Y2_MAX)
+    jx1 = map_axis(ax1.value, X1_MIN, X1_MAX, -127, 127)
+    jy1 = map_axis(ay1.value, Y1_MIN, Y1_MAX, -127, 127)
+    jx2 = map_axis(ax2.value, X2_MIN, X2_MAX, -127, 127)
+    jy2 = map_axis(ay2.value, Y2_MIN, Y2_MAX, -127, 127)
+
+    return jx1, jy1, jx2, jy2
+
+def get_axis_B_format():
+    global ax1, ay1, ax2, ay2
+    jx1 = map_axis(ax1.value, X1_MIN, X1_MAX, 0, 255)
+    jy1 = map_axis(ay1.value, Y1_MIN, Y1_MAX, 0, 255)
+    jx2 = map_axis(ax2.value, X2_MIN, X2_MAX, 0, 255)
+    jy2 = map_axis(ay2.value, Y2_MIN, Y2_MAX, 0, 255)
 
     return jx1, jy1, jx2, jy2
 
