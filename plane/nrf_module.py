@@ -2,6 +2,7 @@ import struct
 import utime
 from machine import Pin, SPI
 import lib.nrf24l01 as nrf24l01 
+import servo_control
 
 # --- Configuration ---
 CHANNEL = 108           
@@ -12,10 +13,10 @@ address = [b"1Node", b"2Node"]
 nrf = None
 last_packet_time = None
 
-ch1 = 0
+ch1 = 127
 ch2 = 0
-ch3 = 0
-ch4 = 0
+ch3 = 127
+ch4 = 127
 
 def setup():
     global nrf, last_packet_time
@@ -65,6 +66,11 @@ def update():
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
         print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
+        ch1 = 127
+        ch2 = 0
+        ch3 = 127
+        ch4 = 127
         pass
+
 
 
