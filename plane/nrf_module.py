@@ -4,6 +4,12 @@ from machine import Pin, SPI
 import lib.nrf24l01 as nrf24l01 
 import servo_control
 
+# Channel Mapping:
+# ch1 = rudder (not used in this plane)
+# ch2 = throttle  
+# ch3 = aileron
+# ch4 = elevator
+
 # --- Configuration ---
 CHANNEL = 108           
 PAYLOAD_SIZE = 16       
@@ -51,7 +57,7 @@ def update():
         
         # Unpack RC Channels
         try:
-            ch1, ch2, ch3, ch4 = struct.unpack("<BBBB", data)
+            ch1, ch2, ch3, ch4 = struct.unpack("<bBbb", data)
             # print("Received Channels:", ch1, ch2, ch3, ch4)
             # Use channel[0], channel[1] etc for servos/motors
             

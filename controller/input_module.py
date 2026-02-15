@@ -63,7 +63,7 @@ def map_axis(raw_val, v_min, v_max, out_min=-127, out_max=127):
     mapped = (raw_val - v_min) * (out_max - out_min) / (v_max - v_min) + out_min
     return int(mapped)
 
-def get_axis_b_format():
+def get_axis_hid_format():
     global ax1, ay1, ax2, ay2
     jx1 = map_axis(ax1.value, X1_MIN, X1_MAX, -127, 127)
     jy1 = map_axis(ay1.value, Y1_MIN, Y1_MAX, -127, 127)
@@ -72,12 +72,12 @@ def get_axis_b_format():
 
     return jx1, jy1, jx2, jy2
 
-def get_axis_B_format():
+def get_axis_rc_format():
     global ax1, ay1, ax2, ay2
-    jx1 = map_axis(ax1.value, X1_MIN, X1_MAX, 0, 255)
+    jx1 = map_axis(ax1.value, X1_MIN, X1_MAX, -127, 127)
     jy1 = map_axis(ay1.value, Y1_MIN, Y1_MAX, 0, 255)
-    jx2 = map_axis(ax2.value, X2_MIN, X2_MAX, 0, 255)
-    jy2 = map_axis(ay2.value, Y2_MIN, Y2_MAX, 0, 255)
+    jx2 = map_axis(ax2.value, X2_MIN, X2_MAX, -127, 127)
+    jy2 = map_axis(ay2.value, Y2_MIN, Y2_MAX, -127, 127)
 
     return jx1, jy1, jx2, jy2
 
