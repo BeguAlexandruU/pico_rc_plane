@@ -3,7 +3,7 @@ import analogio
 import digitalio
 import keypad
 
-X1_MIN, X1_MAX = 8000, 57000 
+X1_MIN, X1_MAX = 8000, 58000 
 Y1_MIN, Y1_MAX = 8000, 58000
 X2_MIN, X2_MAX = 8000, 58000
 Y2_MIN, Y2_MAX = 8000, 58000
