@@ -33,11 +33,11 @@ def setup():
 
 def map_input_to_servo(input_val, target_min_angle, target_max_angle):
     """
-    Maps 0-255 input -> Target Angle -> Servo Value (0.0 to 1.0)
+    Maps -127 to 127 input -> Target Angle -> Servo Value (0.0 to 1.0)
     """
-    # 1. Map input (0-255) to Target Angle (e.g., -30 to 30)
+    # 1. Map input (-127 to 127) to Target Angle (e.g., -30 to 30)
     # Formula: (val - in_min) * (out_range) / (in_range) + out_min
-    angle = (input_val - 0) * (target_max_angle - target_min_angle) / (255 - 0) + target_min_angle
+    angle = (input_val - (-127)) * (target_max_angle - target_min_angle) / (127 - (-127)) + target_min_angle
     
     # 2. Map Target Angle to Servo Value (0.0 - 1.0)
     # Assumes 0.0 = -90deg, 0.5 = 0deg, 1.0 = +90deg (Standard 180 throw)

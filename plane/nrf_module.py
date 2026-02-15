@@ -19,10 +19,10 @@ address = [b"1Node", b"2Node"]
 nrf = None
 last_packet_time = None
 
-ch1 = 127
+ch1 = 0
 ch2 = 0
-ch3 = 127
-ch4 = 127
+ch3 = 0
+ch4 = 0
 
 def setup():
     global nrf, last_packet_time
@@ -71,11 +71,11 @@ def update():
       
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
-        print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
-        ch1 = 127
+        # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
+        ch1 = 0
         ch2 = 0
-        ch3 = 127
-        ch4 = 127
+        ch3 = 0
+        ch4 = 0
         pass
 
 
