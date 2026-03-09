@@ -3,7 +3,7 @@ from machine import Pin, PWM
 MIN_DUTY = 3277  # ~1ms pulse (0% throttle)
 MAX_DUTY = 6554  # ~2ms pulse (100% throttle)
 DUTY_RANGE = MAX_DUTY - MIN_DUTY
-MOTOR_PIN = 0
+MOTOR_PIN = 22
 
 motor_pwm = None
 

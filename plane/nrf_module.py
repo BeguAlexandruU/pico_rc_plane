@@ -2,7 +2,6 @@ import struct
 import utime
 from machine import Pin, SPI
 import lib.nrf24l01 as nrf24l01 
-import servo_control
 
 # Channel Mapping:
 # ch1 = rudder (not used in this plane)
@@ -60,7 +59,7 @@ def update():
             ch1, ch2, ch3, ch4 = struct.unpack("<bBbb", data)
             # print("Received Channels:", ch1, ch2, ch3, ch4)
             # Use channel[0], channel[1] etc for servos/motors
-            
+
         except:
             print("Failed to unpack data")
         
@@ -68,6 +67,8 @@ def update():
         # nrf.stop_listening()
         # nrf.send(struct.pack("i", rssi_value))
         # nrf.start_listening()
+
+        
       
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
@@ -76,6 +77,7 @@ def update():
         ch2 = 0
         ch3 = 0
         ch4 = 0
+
         pass
 
 

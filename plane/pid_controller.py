@@ -1,6 +1,7 @@
 import time
 import nrf_module
 import imu_module
+import motor_control
 import servo_control
 
 
@@ -71,5 +72,7 @@ def update():
     
     servo_control.set_aileron(aileron_output)
     servo_control.set_elevator(elevator_output)
+
+    motor_control.set_throttle(nrf_module.ch2)
 
 
