@@ -1,8 +1,8 @@
 import imu_module
 import nrf_module
 import motor_control
-# import pid_controller
-import pid_controller_v2
+import pid_controller
+# import pid_controller_v2
 import servo_control
 import utime
 
@@ -21,7 +21,8 @@ def setup():
     
     imu_module.setup()
     nrf_module.setup()
-    pid_controller_v2.setup()
+    pid_controller.setup()
+    #pid_controller_v2.setup()
 
 
 setup()    
@@ -51,7 +52,8 @@ while True:
     imu_module.update()
     # print("Heading, Pitch, Roll: {:7.3f} {:7.3f} {:7.3f}".format(imu_module.fusion.heading, imu_module.fusion.pitch, imu_module.fusion.roll), end="\r")
     
-    pid_controller_v2.update()
+    #pid_controller_v2.update()
+    pid_controller.update()
 
     # Calculate how long the work took
     elapsed = utime.ticks_diff(utime.ticks_us(), start_tick)
@@ -59,3 +61,4 @@ while True:
     # Wait for the remaining time to hit exactly 100Hz
     if elapsed < TARGET_PERIOD:
         utime.sleep_us(TARGET_PERIOD - elapsed)
+
