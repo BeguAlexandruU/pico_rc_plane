@@ -69,7 +69,12 @@ def send_message():
     jx1, jy1, jx2, jy2 = controller.get_axis_rc_format()
     if armed:
         jy1 = 0
-    payload = struct.pack("<bBbb", jx1, jy1, jx2, jy2) 
+    
+    # map controll
+    # jy1 = 0  # throttle
+    # jx2 = 0  # aileron
+    # jy2 = 0  # elevator
+    payload = struct.pack("<bBbb", jx1, jy1, max(-127, min(127, int(jx2-trim_roll))), max(-127, min(127, int(jy2+trim_pitch))))
     
     result = nrf.send(payload)
     packets_sent += 1
