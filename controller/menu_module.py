@@ -6,10 +6,10 @@ import time
 import i2cdisplaybus  
 import adafruit_displayio_ssd1306 
 from adafruit_display_text import bitmap_label
-import input_module as controller
-import usb_hid_gamepad as usb_gamepad
 import rc_controller as rc_controller
 import state_control as state_control
+
+from adafruit_ina219 import INA219
 
 
 # --- 5. STATE MACHINE ---
@@ -28,6 +28,7 @@ usb_group = None
 # UI Elements
 menu_label = None
 
+power_label = None
 arm_label = None
 mode_label = None
 trim_roll_label = None
@@ -40,8 +41,12 @@ pitch_value = 0
 roll_value = 0
 last_display_update = time.monotonic()
 
+# Hardware Interfaces
+ina219 = None
+
 def setup():
     global main_group, menu_group, fly_group, usb_group, menu_index, menu_label, arm_label, mode_label, trim_roll_label, trim_pitch_label, usb_label
+    global ina219, power_label
     # controller.setup()
     # usb_gamepad.setup()
     # rc_controller.setup()
@@ -53,6 +58,9 @@ def setup():
     # The specific line that was causing your error:
     display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
     display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=64)
+
+    # 
+    ina219 = INA219(i2c)    
 
     # --- 3. UI GROUPS (Performance Secret) ---
     # We create separate groups for different screens so we don't 
@@ -72,10 +80,14 @@ def setup():
     menu_group.append(menu_label)
 
     # Setup Fly Mode (Using specific labels we can update individually)
+    power_label = bitmap_label.Label(terminalio.FONT, text="0 V", x=8, y=8)
+    power_label.anchor_point = (1.0, 0)
+    power_label.anchored_position = (120, 0)
     arm_label = bitmap_label.Label(terminalio.FONT, text="ARMED", x=8, y=8)
     mode_label = bitmap_label.Label(terminalio.FONT, text="Mode: STABILIZE", x=8, y=20)
     trim_roll_label = bitmap_label.Label(terminalio.FONT, text="Trim Roll: 0", x=8, y=32)
     trim_pitch_label = bitmap_label.Label(terminalio.FONT, text="Trim Pitch: 0", x=8, y=44)
+    fly_group.append(power_label)
     fly_group.append(arm_label)
     fly_group.append(mode_label)
     fly_group.append(trim_roll_label)
@@ -100,4 +112,10 @@ def change_menu(new_state):
         main_group.append(fly_group)
     elif new_state == state_control.STATE_USB:
         main_group.append(usb_group)
+
+def update_power():
+    global ina219, power_label
+
+    power_label.text = f"{ina219.bus_voltage:.2f} V"
+
 
