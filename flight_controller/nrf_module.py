@@ -14,6 +14,8 @@ CHANNEL = 108
 PAYLOAD_SIZE = 16       
 # PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
 address = [b"1Node", b"2Node"]
+TX_ADDR = b"node3"
+RX_ADDR = b"node2"
 
 nrf = None
 last_packet_time = None

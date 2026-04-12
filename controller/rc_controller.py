@@ -11,7 +11,9 @@ CHANNEL = 108
 PAYLOAD_SIZE = 16
 ROLE = "tx"
 # PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
-address = [b"1Node", b"2Node"]
+# address = [b"1Node", b"2Node"]
+TX_ADDR = b"node2"
+RX_ADDR = b"....."
 
 nrf = None
 
@@ -50,8 +52,8 @@ def setup():
     nrf.channel = CHANNEL
     
     # Configure pipes
-    nrf.open_tx_pipe(address[0])
-    nrf.open_rx_pipe(1, address[1])
+    nrf.open_tx_pipe(TX_ADDR)
+    nrf.open_rx_pipe(1, RX_ADDR)
     
     nrf.listen = False 
 
