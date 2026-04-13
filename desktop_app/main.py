@@ -120,15 +120,12 @@ class Telemetry3D(QMainWindow):
                         break
                 
                 if last_valid_line:
-                    # Format așteptat de la Pico: v_batt, roll, pitch, alt
+                    # Format așteptat de la Pico: roll,pitch,alt,timestamp
                     parts = last_valid_line.split(',')
-                    _, roll, pitch, _ = [float(x) for x in parts[:4]]
-                    # print(f"Received Telemetry: Roll={roll:.2f}, Pitch={pitch:.2f}")
-
-                    # pitch = np.clip(pitch, -90, 90)
-                    # roll = np.clip(roll, -90, 90)
+                    roll, pitch, alt, timestamp = [float(x) for x in parts[:4]]
+                    print(f"Received Telemetry: Timestamp={timestamp:.2f}")
                     
-                    # --- Update Avion ---
+                    # --- Update plane ---
                     self.plane.resetTransform()
                     self.plane.rotate(roll, 0, 1, 0) # Rotație bot sus/jos (Axa Y)
                     self.plane.rotate(-pitch, 1, 0, 0) # Rotație aripi (Axa X) - am pus minus pentru direcție corectă

@@ -3,12 +3,6 @@ import utime
 from machine import Pin, SPI
 import lib.nrf24l01 as nrf24l01 
 
-# Channel Mapping:
-# ch1 = rudder (not used in this plane)
-# ch2 = throttle  
-# ch3 = aileron
-# ch4 = elevator
-
 # --- Configuration ---
 CHANNEL = 108           
 PAYLOAD_SIZE = 16       
@@ -20,10 +14,10 @@ RX_ADDR = b"node3"
 nrf = None
 last_packet_time = None
 
-ch1 = 0
-ch2 = 0
-ch3 = 0
-ch4 = 0
+roll = 0.0
+pitch = 0.0
+alt = 0.0
+timestamp = 0
 
 def setup():
     global nrf, last_packet_time
@@ -50,7 +44,7 @@ def setup():
 
 def update():
     global nrf, last_packet_time
-    global ch1, ch2, ch3, ch4
+    global roll, pitch, alt, timestamp
   
     if nrf.any():
         data = nrf.recv()
@@ -58,10 +52,8 @@ def update():
         
         # Unpack RC Channels
         try:
-            ch1, ch2, ch3, ch4 = struct.unpack("<ffff", data)
-            # print("Received Channels:", ch1, ch2, ch3, ch4)
-            print(f"{ch1},{ch2},{ch3},{ch4}")
-            # Use channel[0], channel[1] etc for servos/motors
+            roll, pitch, alt, timestamp = struct.unpack("<fffI", data)
+            print(f"{roll},{pitch},{alt},{timestamp}")
 
         except:
             print("Failed to unpack data")
@@ -69,11 +61,9 @@ def update():
       
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
-        print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
-        ch1 = 0
-        ch2 = 0
-        ch3 = 0
-        ch4 = 0
+        # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
+        # roll, pitch, alt, timestamp = 0, 0, 0, 0
+        print("NO SIGNAL")
 
         pass
 
