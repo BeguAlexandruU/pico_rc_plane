@@ -123,19 +123,19 @@ class Telemetry3D(QMainWindow):
                     # Format așteptat de la Pico: v_batt, roll, pitch, alt
                     parts = last_valid_line.split(',')
                     _, roll, pitch, _ = [float(x) for x in parts[:4]]
+                    # print(f"Received Telemetry: Roll={roll:.2f}, Pitch={pitch:.2f}")
 
-                    # Corecții axe (ajustează în funcție de cum e montat senzorul pe dronă)
-                    # nRF24 trimite adesea grade. OpenGL folosește tot grade aici.
-                    pitch = np.clip(pitch, -90, 90)
-                    roll = np.clip(roll, -90, 90)
+                    # pitch = np.clip(pitch, -90, 90)
+                    # roll = np.clip(roll, -90, 90)
                     
                     # --- Update Avion ---
                     self.plane.resetTransform()
-                    self.plane.rotate(pitch, 0, 1, 0) # Rotație bot sus/jos (Axa Y)
-                    self.plane.rotate(-roll, 1, 0, 0) # Rotație aripi (Axa X) - am pus minus pentru direcție corectă
+                    self.plane.rotate(roll, 0, 1, 0) # Rotație bot sus/jos (Axa Y)
+                    self.plane.rotate(-pitch, 1, 0, 0) # Rotație aripi (Axa X) - am pus minus pentru direcție corectă
 
             except Exception as e:
                 # Erorile de conversie sunt ignorate (pachete corupte)
+                print(f"Eroare la procesarea datelor: {e}")
                 pass
 
 if __name__ == "__main__":

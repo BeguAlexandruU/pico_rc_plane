@@ -9,6 +9,7 @@ nrf_module.setup()
 
 while True:
     nrf_module.update()
+    # time.sleep(0.01)  # Telemetrie la 100Hz
 
 # Aici ar fi logica ta de primire date de la nRF24L01
 # Presupunem că ai extras deja valorile:

@@ -9,7 +9,7 @@ import input_module as controller
 # constants
 CHANNEL = 108
 PAYLOAD_SIZE = 16
-ROLE = "tx"
+# ROLE = "tx"
 # PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
 # address = [b"1Node", b"2Node"]
 TX_ADDR = b"node2"

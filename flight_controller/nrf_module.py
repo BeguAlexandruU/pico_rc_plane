@@ -1,4 +1,5 @@
 import struct
+import imu_module
 import utime
 from machine import Pin, SPI
 import lib.nrf24l01 as nrf24l01 
@@ -13,12 +14,13 @@ import lib.nrf24l01 as nrf24l01
 CHANNEL = 108           
 PAYLOAD_SIZE = 16       
 # PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
-address = [b"1Node", b"2Node"]
+# address = [b"1Node", b"2Node"]
 TX_ADDR = b"node3"
 RX_ADDR = b"node2"
 
 nrf = None
 last_packet_time = None
+last_telemetry_time = None
 
 ch1 = 0
 ch2 = 0
@@ -26,7 +28,7 @@ ch3 = 0
 ch4 = 0
 
 def setup():
-    global nrf, last_packet_time
+    global nrf, last_packet_time, last_telemetry_time
     
     # initialize nRF24L01
     spi = SPI(0, sck=Pin(18), mosi=Pin(19), miso=Pin(16))
@@ -39,17 +41,18 @@ def setup():
     nrf.set_power_speed(nrf24l01.POWER_3, nrf24l01.SPEED_250K)
     
     # disable auto-ack
-    # nrf.reg_write(0x01, 0x00)
+    nrf.reg_write(0x01, 0x00)
     
     # rx mode
-    nrf.open_tx_pipe(address[1])
-    nrf.open_rx_pipe(1, address[0])
+    nrf.open_tx_pipe(TX_ADDR)
+    nrf.open_rx_pipe(1, RX_ADDR)
     
     nrf.start_listening()
     last_packet_time = utime.ticks_ms()
+    last_telemetry_time = utime.ticks_ms()
 
 def update():
-    global nrf, last_packet_time
+    global nrf, last_packet_time, last_telemetry_time
     global ch1, ch2, ch3, ch4
   
     if nrf.any():
@@ -65,12 +68,13 @@ def update():
         except:
             print("Failed to unpack data")
         
-        # Optional: Send tiny telemetry packet back if needed
-        # nrf.stop_listening()
-        # nrf.send(struct.pack("i", rssi_value))
-        # nrf.start_listening()
+    # Send telemetry once per second
+    #if utime.ticks_diff(utime.ticks_ms(), last_telemetry_time) >= 100:
+    nrf.stop_listening()
+    nrf.send(struct.pack("<ffff", 0, imu_module.fusion.roll, imu_module.fusion.pitch, 0))
+    nrf.start_listening()
+    last_telemetry_time = utime.ticks_ms()
 
-        
       
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
@@ -81,6 +85,16 @@ def update():
         ch4 = 0
 
         pass
+    
+# def send_telemetry(v_batt, pitch, roll, alt):
+#     global nrf
+#     # Pack telemetry data into 16 bytes
+#     # Format: <f f f f (4 floats for battery, pitch, roll, alt)
+#     payload = struct.pack("<ffff", v_batt, pitch, roll, alt)
+    
+#     nrf.stop_listening()
+#     nrf.send(payload)
+#     nrf.start_listening()
 
 
 
