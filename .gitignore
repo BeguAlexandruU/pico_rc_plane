@@ -184,3 +184,4 @@ pyrightconfig.json
 
 machine.py
 utime.py
+telemetry_logs/

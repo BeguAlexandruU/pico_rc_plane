@@ -13,11 +13,11 @@ if __name__ == "__main__":
     try:
         while True:
             v_batt = 12.4
-            # pitch = math.sin(t) * 30
+            pitch = math.sin(t) * 30
             roll = math.cos(t) * 30
             alt = 100 + math.sin(t) * 10
             
-            msg = f"{v_batt},{pitch},{roll},{alt}\n"
+            msg = f"{roll}, {pitch}, {alt}, {v_batt}\n"
             ser.write(msg.encode('utf-8'))
             
             t += 0.1
