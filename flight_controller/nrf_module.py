@@ -71,7 +71,11 @@ def update():
     # Send telemetry once per second
     #if utime.ticks_diff(utime.ticks_ms(), last_telemetry_time) >= 100:
     nrf.stop_listening()
-    nrf.send(struct.pack("<fffI", imu_module.fusion.roll, imu_module.fusion.pitch, 0, utime.ticks_ms()))
+    nrf.send(struct.pack("<fffI", 
+                         imu_module.fusion.roll, 
+                         imu_module.fusion.pitch, 
+                         0, 
+                         utime.ticks_ms()))
     nrf.start_listening()
     # last_telemetry_time = utime.ticks_ms()
 
