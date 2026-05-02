@@ -48,8 +48,10 @@ def setup():
     # Deactivate Auto-ACK ( nrf.reg_write(0x01, 0x00) )
     nrf.allow_ask_no_ack = False
     nrf.dynamic_payloads = False
-    nrf.payload_length = 16
+    nrf.payload_length = PAYLOAD_SIZE
     nrf.channel = CHANNEL
+    nrf.auto_ack = False       # Dezactivează așteptarea ACK global
+    nrf.arc = 0                # Dezactivează re-trimiterile (Auto Re-transmit Count)
     
     # Configure pipes
     nrf.open_tx_pipe(TX_ADDR)
@@ -85,10 +87,10 @@ def send_message():
         packets_success += 1
         
     # 3. Statistici la fiecare secundă (opțional)
-    # if time.monotonic() - start_time > 1.0:
-    #     print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
-    #     packets_sent = 0
-    #     start_time = time.monotonic()
+    if time.monotonic() - start_time > 1.0:
+        print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
+        packets_sent = 0
+        start_time = time.monotonic()
 
     # Mică pauză pentru stabilitate (50Hz = 20ms)
     # time.sleep(0.02)

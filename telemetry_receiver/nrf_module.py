@@ -34,6 +34,7 @@ def setup():
     
     # disable auto-ack
     nrf.reg_write(0x01, 0x00)
+    nrf.reg_write(0x04, 0x00)
     
     # rx mode
     nrf.open_tx_pipe(TX_ADDR)

@@ -42,22 +42,26 @@ def setup():
     
     # disable auto-ack
     nrf.reg_write(0x01, 0x00)
+    nrf.reg_write(0x04, 0x00)
     
     # rx mode
     nrf.open_tx_pipe(TX_ADDR)
     nrf.open_rx_pipe(1, RX_ADDR)
     
     nrf.start_listening()
-    last_packet_time = utime.ticks_ms()
-    last_telemetry_time = utime.ticks_ms()
+    current_time = utime.ticks_ms()
+    last_packet_time = current_time
+    last_telemetry_time = current_time
 
 def update():
     global nrf, last_packet_time, last_telemetry_time
     global ch1, ch2, ch3, ch4
+    
+    current_time = utime.ticks_ms()
   
     if nrf.any():
         data = nrf.recv()
-        last_packet_time = utime.ticks_ms()
+        last_packet_time = current_time
         
         # Unpack RC Channels
         try:
@@ -68,20 +72,24 @@ def update():
         except:
             print("Failed to unpack data")
         
-    # Send telemetry once per second
-    #if utime.ticks_diff(utime.ticks_ms(), last_telemetry_time) >= 100:
-    nrf.stop_listening()
-    nrf.send(struct.pack("<fffI", 
-                         imu_module.fusion.roll, 
-                         imu_module.fusion.pitch, 
-                         0, 
-                         utime.ticks_ms()))
-    nrf.start_listening()
-    # last_telemetry_time = utime.ticks_ms()
-
+    # Send telemetry
+    if utime.ticks_diff(current_time, last_telemetry_time) > 200:
+        try:
+            last_telemetry_time = current_time
+            nrf.stop_listening()
+            nrf.send(struct.pack("<fffI", 
+                                 imu_module.fusion.roll, 
+                                 imu_module.fusion.pitch, 
+                                 imu_module.bmp.altitude, 
+                                 current_time), 
+                                 ask_no_ack=True)
+        except:
+            print("Failed to send telemetry")
+        finally:
+            nrf.start_listening()
       
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
-    if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
+    if utime.ticks_diff(current_time, last_packet_time) > 1000:
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
         ch1 = 0
         ch2 = 0
@@ -99,6 +107,8 @@ def update():
 #     nrf.stop_listening()
 #     nrf.send(payload)
 #     nrf.start_listening()
+
+
 
 
 
