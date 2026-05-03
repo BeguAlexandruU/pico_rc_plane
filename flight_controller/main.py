@@ -2,7 +2,6 @@ import imu_module
 import nrf_module
 import motor_control
 import pid_controller
-# import pid_controller_v2
 import servo_control
 import utime
 
@@ -22,11 +21,9 @@ def setup():
     imu_module.setup()
     nrf_module.setup()
     pid_controller.setup()
-    #pid_controller_v2.setup()
 
 
 setup()    
-
 
 # last_time = utime.ticks_us()
 while True:
@@ -45,14 +42,10 @@ while True:
 
     start_tick = utime.ticks_us()
 
-
     nrf_module.update()
-    # print("Channels: {:3d} {:3d} {:3d} {:3d}".format(nrf_module.ch1, nrf_module.ch2, nrf_module.ch3, nrf_module.ch4), end="\r")
-    
+
     imu_module.update()
-    # print("Heading, Pitch, Roll: {:7.3f} {:7.3f} {:7.3f}".format(imu_module.fusion.heading, imu_module.fusion.pitch, imu_module.fusion.roll), end="\r")
-    
-    #pid_controller_v2.update()
+
     pid_controller.update()
 
     # Calculate how long the work took

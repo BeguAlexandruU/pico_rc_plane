@@ -15,7 +15,7 @@ import pyqtgraph.opengl as gl
 class Telemetry3D(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Pico Drone GCS (Ground Control Station)")
+        self.setWindowTitle("Pico Drone Ground Control Station")
         self.resize(1400, 900)
 
         # Configurare stocare

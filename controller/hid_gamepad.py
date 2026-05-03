@@ -1,5 +1,3 @@
-import struct
-import time
 
 class Gamepad:
     def __init__(self, devices):

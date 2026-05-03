@@ -26,7 +26,7 @@ def setup():
     accel = imu_sensor.accel.xyz
     gyro = imu_sensor.gyro.xyz
     start = time.ticks_us()  # Measure computation time only
-    fusion.update_nomag(accel, gyro) # 979μs on Pyboard
+    fusion.update_nomag(accel, gyro) 
     t = time.ticks_diff(time.ticks_us(), start)
     print("Update time (uS):", t)
 
@@ -35,16 +35,3 @@ def update():
     
     fusion.update_nomag(imu_sensor.accel.xyz, imu_sensor.gyro.xyz)
     
-    
-# count = 0
-# while True:
-#     update()
-#     if count % 5 == 0:
-#         print("Heading, Pitch, Roll: {:7.3f} {:7.3f} {:7.3f}".format(fusion.heading, fusion.pitch, fusion.roll), end="\r")
-#         # oled.fill(0)
-#         # oled.text("H:{:7.2f}".format(fusion.heading), 0, 0)
-#         # oled.text("P:{:7.2f}".format(fusion.pitch), 0, 16)
-#         # oled.text("R:{:7.2f}".format(fusion.roll), 0, 32)
-#         # oled.show()
-#     time.sleep_ms(20)
-#     count += 1

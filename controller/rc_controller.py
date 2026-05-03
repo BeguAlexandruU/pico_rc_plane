@@ -9,9 +9,6 @@ import input_module as controller
 # constants
 CHANNEL = 108
 PAYLOAD_SIZE = 16
-# ROLE = "tx"
-# PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
-# address = [b"1Node", b"2Node"]
 TX_ADDR = b"node2"
 RX_ADDR = b"....."
 
@@ -32,8 +29,6 @@ def setup():
     global nrf
     global packets_sent, packets_success, start_time # debug
     
-    # controller.setup()
-    
     # Initialize SPI and NRF24L01
     spi = busio.SPI(board.GP10, MOSI=board.GP11, MISO=board.GP12)
     csn = digitalio.DigitalInOut(board.GP9)
@@ -45,7 +40,7 @@ def setup():
     nrf.pa_level = 0 
     nrf.data_rate = 250
     
-    # Deactivate Auto-ACK ( nrf.reg_write(0x01, 0x00) )
+    # Deactivate Auto-ACK 
     nrf.allow_ask_no_ack = False
     nrf.dynamic_payloads = False
     nrf.payload_length = PAYLOAD_SIZE
@@ -86,14 +81,11 @@ def send_message():
     if result:
         packets_success += 1
         
-    # 3. Statistici la fiecare secundă (opțional)
+    # 3. Statistici la fiecare secundă 
     if time.monotonic() - start_time > 1.0:
         print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
         packets_sent = 0
         start_time = time.monotonic()
-
-    # Mică pauză pentru stabilitate (50Hz = 20ms)
-    # time.sleep(0.02)
 
 # Rulare
 if __name__ == "__main__":
@@ -105,5 +97,3 @@ if __name__ == "__main__":
     
     while True:
         send_message()
-
-

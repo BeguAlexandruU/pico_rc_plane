@@ -6,8 +6,6 @@ import lib.nrf24l01 as nrf24l01
 # --- Configuration ---
 CHANNEL = 108           
 PAYLOAD_SIZE = 16       
-# PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
-# address = [b"1Node", b"2Node"]
 TX_ADDR = b"....."
 RX_ADDR = b"node3"
 
@@ -63,11 +61,6 @@ def update():
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
-        # roll, pitch, alt, timestamp = 0, 0, 0, 0
         print("NO SIGNAL")
 
         pass
-
-
-
-

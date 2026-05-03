@@ -82,7 +82,6 @@ if __name__ == "__main__":
                         rc_controller.trim_roll -= 2
                         menu_module.trim_roll_label.text = f"Trim Roll: {rc_controller.trim_roll}"
                         
-                        
             elif event.released:
                 if event.key_number == controller.SW_ARM: # Switch ARM
                     if state_control.current_state == state_control.STATE_FLY:

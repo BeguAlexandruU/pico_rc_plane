@@ -59,12 +59,10 @@ def setup():
     display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
     display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=64)
 
-    # 
-    ina219 = INA219(i2c)    
+    # --- 2. SENSOR SETUP ---
+    ina219 = INA219(i2c) # sensor for voltage/current monitoring
 
-    # --- 3. UI GROUPS (Performance Secret) ---
-    # We create separate groups for different screens so we don't 
-    # have to "redraw" everything—we just switch which group is visible.
+    # --- 3. UI GROUPS ---
     main_group = displayio.Group()
     menu_group = displayio.Group()
     fly_group = displayio.Group()
@@ -73,7 +71,6 @@ def setup():
     display.root_group = main_group
 
     # --- 4. PRE-BUILD THE SCREENS ---
-    # We build these ONCE to save CPU cycles during flight.
 
     # Setup Menu
     menu_label = bitmap_label.Label(terminalio.FONT, text="> Fly Mode\n  USB Mode", x=10, y=20, line_spacing=1.5)
@@ -117,5 +114,3 @@ def update_power():
     global ina219, power_label
 
     power_label.text = f"{ina219.bus_voltage:.2f} V"
-
-

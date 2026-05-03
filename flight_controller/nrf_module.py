@@ -5,7 +5,7 @@ from machine import Pin, SPI
 import lib.nrf24l01 as nrf24l01 
 
 # Channel Mapping:
-# ch1 = rudder (not used in this plane)
+# ch1 = rudder (not used)
 # ch2 = throttle  
 # ch3 = aileron
 # ch4 = elevator
@@ -13,8 +13,6 @@ import lib.nrf24l01 as nrf24l01
 # --- Configuration ---
 CHANNEL = 108           
 PAYLOAD_SIZE = 16       
-# PIPES = (b"\xe1\xf0\xf0\xf0\xf0", b"\xd2\xf0\xf0\xf0\xf0")
-# address = [b"1Node", b"2Node"]
 TX_ADDR = b"node3"
 RX_ADDR = b"node2"
 
@@ -72,7 +70,7 @@ def update():
         except:
             print("Failed to unpack data")
         
-    # Send telemetry
+    # Send telemetry 5Hz
     if utime.ticks_diff(current_time, last_telemetry_time) > 200:
 
         last_telemetry_time = current_time
@@ -85,27 +83,11 @@ def update():
         nrf.send(payload)
         nrf.start_listening()
 
-    # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
+    # FAILSAFE Logic: If no packet for 1000ms, cut the motors
     if utime.ticks_diff(current_time, last_packet_time) > 1000:
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
         ch1 = 0
         ch2 = 0
         ch3 = 0
         ch4 = 0
-
-        pass
-    
-# def send_telemetry(v_batt, pitch, roll, alt):
-#     global nrf
-#     # Pack telemetry data into 16 bytes
-#     # Format: <f f f f (4 floats for battery, pitch, roll, alt)
-#     payload = struct.pack("<ffff", v_batt, pitch, roll, alt)
-    
-#     nrf.stop_listening()
-#     nrf.send(payload)
-#     nrf.start_listening()
-
-
-
-
 
