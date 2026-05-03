@@ -84,9 +84,7 @@ def update():
                          current_time)
         nrf.send(payload)
         nrf.start_listening()
-      
-    # 
-      
+
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(current_time, last_packet_time) > 1000:
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
