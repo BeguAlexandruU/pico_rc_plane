@@ -71,7 +71,7 @@ def update():
     elevator_output = pitch_pid.compute(target_pitch, current_pitch)
     
     servo_control.set_aileron(aileron_output)
-    servo_control.set_elevator(elevator_output)
+    servo_control.set_elevator(-elevator_output)
 
     motor_control.set_throttle(nrf_module.ch2)
 

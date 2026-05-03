@@ -427,8 +427,8 @@ class Telemetry3D(QMainWindow):
         
         # Update 3D Model
         self.plane.resetTransform()
-        self.plane.rotate(roll, 0, 1, 0) 
-        self.plane.rotate(-pitch, 1, 0, 0)
+        self.plane.rotate(-roll, 0, 1, 0) 
+        self.plane.rotate(pitch, 1, 0, 0)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

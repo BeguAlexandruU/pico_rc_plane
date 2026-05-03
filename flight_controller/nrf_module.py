@@ -74,19 +74,18 @@ def update():
         
     # Send telemetry
     if utime.ticks_diff(current_time, last_telemetry_time) > 200:
-        try:
-            last_telemetry_time = current_time
-            nrf.stop_listening()
-            nrf.send(struct.pack("<fffI", 
-                                 imu_module.fusion.roll, 
-                                 imu_module.fusion.pitch, 
-                                 imu_module.bmp.altitude, 
-                                 current_time), 
-                                 ask_no_ack=True)
-        except:
-            print("Failed to send telemetry")
-        finally:
-            nrf.start_listening()
+
+        last_telemetry_time = current_time
+        nrf.stop_listening()
+        payload = struct.pack("<fffI", 
+                         imu_module.fusion.roll, 
+                         imu_module.fusion.pitch, 
+                         imu_module.bmp.altitude, 
+                         current_time)
+        nrf.send(payload)
+        nrf.start_listening()
+      
+    # 
       
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
     if utime.ticks_diff(current_time, last_packet_time) > 1000:
