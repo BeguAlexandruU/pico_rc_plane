@@ -3,6 +3,7 @@ import nrf_module
 import motor_control
 import pid_controller
 import servo_control
+import gps_module
 import utime
 
 # ==== for me
@@ -21,6 +22,7 @@ def setup():
     imu_module.setup()
     nrf_module.setup()
     pid_controller.setup()
+    gps_module.setup()
 
 
 setup()    
@@ -47,6 +49,8 @@ while True:
     imu_module.update()
 
     pid_controller.update()
+
+    gps_module.update()
 
     # Calculate how long the work took
     elapsed = utime.ticks_diff(utime.ticks_us(), start_tick)

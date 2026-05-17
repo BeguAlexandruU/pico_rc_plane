@@ -1,4 +1,5 @@
 import struct
+import gps_module
 import imu_module
 import utime
 from machine import Pin, SPI
@@ -12,7 +13,7 @@ import lib.nrf24l01 as nrf24l01
 
 # --- Configuration ---
 CHANNEL = 108           
-PAYLOAD_SIZE = 16       
+PAYLOAD_SIZE = 24      
 TX_ADDR = b"node3"
 RX_ADDR = b"node2"
 
@@ -75,10 +76,12 @@ def update():
 
         last_telemetry_time = current_time
         nrf.stop_listening()
-        payload = struct.pack("<fffI", 
+        payload = struct.pack("<fffffI", 
                          imu_module.fusion.roll, 
                          imu_module.fusion.pitch, 
                          imu_module.bmp.altitude, 
+                         gps_module.lat,
+                         gps_module.lon,
                          current_time)
         nrf.send(payload)
         nrf.start_listening()
@@ -90,4 +93,5 @@ def update():
         ch2 = 0
         ch3 = 0
         ch4 = 0
+
 

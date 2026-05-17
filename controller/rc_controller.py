@@ -8,7 +8,7 @@ import input_module as controller
 
 # constants
 CHANNEL = 108
-PAYLOAD_SIZE = 16
+PAYLOAD_SIZE = 24
 TX_ADDR = b"node2"
 RX_ADDR = b"....."
 
@@ -81,19 +81,19 @@ def send_message():
     if result:
         packets_success += 1
         
-    # 3. Statistici la fiecare secundă 
-    if time.monotonic() - start_time > 1.0:
-        print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
-        packets_sent = 0
-        start_time = time.monotonic()
+    # # 3. Statistici la fiecare secundă 
+    # if time.monotonic() - start_time > 1.0:
+    #     print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
+    #     packets_sent = 0
+    #     start_time = time.monotonic()
 
-# Rulare
-if __name__ == "__main__":
+# # Rulare
+# if __name__ == "__main__":
 
-    setup()
+#     setup()
     
-    # În CircuitPython, nrf.listen controlează dacă e în mod RX sau TX
-    print("RC Transmitter Mode Started (CircuitPython)...")
+#     # În CircuitPython, nrf.listen controlează dacă e în mod RX sau TX
+#     print("RC Transmitter Mode Started (CircuitPython)...")
     
-    while True:
-        send_message()
+#     while True:
+#         send_message()

@@ -5,7 +5,7 @@ import lib.nrf24l01 as nrf24l01
 
 # --- Configuration ---
 CHANNEL = 108           
-PAYLOAD_SIZE = 16       
+PAYLOAD_SIZE = 24       
 TX_ADDR = b"....."
 RX_ADDR = b"node3"
 
@@ -15,6 +15,8 @@ last_packet_time = None
 roll = 0.0
 pitch = 0.0
 alt = 0.0
+gps_lat = 0.0
+gps_lon = 0.0
 timestamp = 0
 
 def setup():
@@ -51,8 +53,8 @@ def update():
         
         # Unpack RC Channels
         try:
-            roll, pitch, alt, timestamp = struct.unpack("<fffI", data)
-            print(f"{roll},{pitch},{alt},{timestamp}")
+            roll, pitch, alt, gps_lat, gps_lon, timestamp = struct.unpack("<fffffI", data)
+            print(f"{roll},{pitch},{alt},{gps_lat},{gps_lon},{timestamp}")
 
         except:
             print("Failed to unpack data")
