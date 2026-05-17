@@ -25,6 +25,7 @@ ch1 = 0
 ch2 = 0
 ch3 = 0
 ch4 = 0
+fly_mode = 0  # 0: Stabilize, 1: Manual
 
 def setup():
     global nrf, last_packet_time, last_telemetry_time
@@ -54,7 +55,7 @@ def setup():
 
 def update():
     global nrf, last_packet_time, last_telemetry_time
-    global ch1, ch2, ch3, ch4
+    global ch1, ch2, ch3, ch4, fly_mode
     
     current_time = utime.ticks_ms()
   
@@ -64,7 +65,7 @@ def update():
         
         # Unpack RC Channels
         try:
-            ch1, ch2, ch3, ch4 = struct.unpack("<bBbb", data)
+            ch1, ch2, ch3, ch4, fly_mode = struct.unpack("<bBbbB", data)
             # print("Received Channels:", ch1, ch2, ch3, ch4)
             # Use channel[0], channel[1] etc for servos/motors
 
@@ -93,5 +94,6 @@ def update():
         ch2 = 0
         ch3 = 0
         ch4 = 0
+        fly_mode = 0
 
 

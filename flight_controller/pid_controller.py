@@ -57,7 +57,7 @@ def map_input_to_angle(x):
     return (x + 127) * ROLL_SLOPE - 90
 
 def update():
-    # 1. Convert NRF Stick (0-255) to Target Angle (-90 to +90 degrees)
+    # 1. Convert NRF Stick (-127 to 127) to Target Angle (-90 to +90 degrees)
     target_roll = map_input_to_angle(nrf_module.ch3)
     target_pitch = map_input_to_angle(nrf_module.ch4)
     
@@ -74,6 +74,8 @@ def update():
     servo_control.set_elevator(-elevator_output)
 
     motor_control.set_throttle(nrf_module.ch2)
+
+    print(f"Target Roll: {target_roll:.1f} | Current Roll: {current_roll:.1f} | Aileron Output: {aileron_output:.1f}")
 
 
 

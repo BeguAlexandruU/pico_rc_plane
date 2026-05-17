@@ -73,15 +73,16 @@ def send_message():
     # jy1 = 0  # throttle
     # jx2 = 0  # aileron
     # jy2 = 0  # elevator
-    payload = struct.pack("<bBbb", jx1, jy1, max(-127, min(127, int(jx2-trim_roll))), max(-127, min(127, int(jy2+trim_pitch))))
+    payload = struct.pack("<bBbbB", jx1, jy1, max(-127, min(127, int(jx2-trim_roll))), max(-127, min(127, int(jy2+trim_pitch))), fly_mode)
     
     result = nrf.send(payload)
-    packets_sent += 1
     
-    if result:
-        packets_success += 1
         
     # # 3. Statistici la fiecare secundă 
+    # packets_sent += 1
+    
+    # if result:
+    #     packets_success += 1
     # if time.monotonic() - start_time > 1.0:
     #     print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
     #     packets_sent = 0
