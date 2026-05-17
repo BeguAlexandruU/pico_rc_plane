@@ -13,6 +13,45 @@ from stl import mesh
 import pyqtgraph.opengl as gl
 
 class Telemetry3D(QMainWindow):
+    # --- Definire Stiluri (Temă Întunecată vs Temă Luminoasă) ---
+    DARK_STYLE = """
+        QMainWindow { background-color: #121212; }
+        QFrame#Card { background-color: #1E1E2E; border-radius: 12px; border: 1px solid #2B2B40; }
+        QFrame#VLine { color: #2B2B40; }
+        QLabel { color: #E0E0E0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; }
+        QLabel#TeleTitle { color: #8A8D93; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: -5px; }
+        QLabel#TeleData { font-family: 'Consolas', monospace; font-size: 28px; color: #00E676; font-weight: bold; background-color: #151521; border-radius: 8px; padding: 10px; border: 1px solid #2B2B40; }
+        QPushButton { background-color: #3D5AFE; color: white; border-radius: 6px; padding: 10px 18px; font-weight: bold; font-size: 14px; border: none; }
+        QPushButton:hover { background-color: #536DFE; }
+        QPushButton:pressed { background-color: #304FFE; }
+        QPushButton:disabled { background-color: #2B2B40; color: #5C5C70; }
+        QComboBox { background-color: #151521; color: white; border: 1px solid #2B2B40; border-radius: 6px; padding: 8px; font-size: 14px; min-width: 120px; }
+        QComboBox::drop-down { border: none; }
+        QSlider::groove:horizontal { border: 1px solid #2B2B40; height: 8px; background: #151521; border-radius: 4px; }
+        QSlider::handle:horizontal { background: #3D5AFE; width: 18px; margin-top: -5px; margin-bottom: -5px; border-radius: 9px; }
+        QSlider::handle:horizontal:disabled { background: #5C5C70; }
+        QStatusBar { color: #8A8D93; background-color: #121212; border-top: 1px solid #2B2B40; }
+    """
+
+    LIGHT_STYLE = """
+        QMainWindow { background-color: #F5F5F7; }
+        QFrame#Card { background-color: #FFFFFF; border-radius: 12px; border: 1px solid #D2D2D7; }
+        QFrame#VLine { color: #D2D2D7; }
+        QLabel { color: #1D1D1F; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; }
+        QLabel#TeleTitle { color: #6E6E73; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: -5px; }
+        QLabel#TeleData { font-family: 'Consolas', monospace; font-size: 28px; color: #1D1D1F; font-weight: bold; background-color: #E8E8ED; border-radius: 8px; padding: 10px; border: 1px solid #D2D2D7; }
+        QPushButton { background-color: #0071E3; color: white; border-radius: 6px; padding: 10px 18px; font-weight: bold; font-size: 14px; border: none; }
+        QPushButton:hover { background-color: #147CE5; }
+        QPushButton:pressed { background-color: #0066CC; }
+        QPushButton:disabled { background-color: #E8E8ED; color: #86868B; }
+        QComboBox { background-color: #FFFFFF; color: #1D1D1F; border: 1px solid #D2D2D7; border-radius: 6px; padding: 8px; font-size: 14px; min-width: 120px; }
+        QComboBox::drop-down { border: none; }
+        QSlider::groove:horizontal { border: 1px solid #D2D2D7; height: 8px; background: #E8E8ED; border-radius: 4px; }
+        QSlider::handle:horizontal { background: #0071E3; width: 18px; margin-top: -5px; margin-bottom: -5px; border-radius: 9px; }
+        QSlider::handle:horizontal:disabled { background: #86868B; }
+        QStatusBar { color: #1D1D1F; background-color: #F5F5F7; border-top: 1px solid #D2D2D7; }
+    """
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Pico Drone Ground Control Station")
@@ -28,83 +67,28 @@ class Telemetry3D(QMainWindow):
         self.recorded_data = []
         self.is_recording = False
         self.is_replaying = False
+        self.is_dark_mode = True  # Pornim implicit în Dark Mode
         self.base_interval = 16  # ~60 FPS
         
-        self.apply_styles()
         self.init_ui()
+        self.apply_theme()  # Aplică tema inițială
 
-    def apply_styles(self):
-        """Aplică tema Dark Mode și stilul de tip Card / Material Design"""
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #121212;
-            }
-            QFrame#Card {
-                background-color: #1E1E2E;
-                border-radius: 12px;
-                border: 1px solid #2B2B40;
-            }
-            QLabel {
-                color: #E0E0E0;
-                font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 14px;
-            }
-            QLabel#TeleTitle {
-                color: #8A8D93;
-                font-size: 12px;
-                font-weight: bold;
-                text-transform: uppercase;
-                margin-bottom: -5px;
-            }
-            QLabel#TeleData {
-                font-family: 'Consolas', monospace;
-                font-size: 28px;
-                color: #00E676;
-                font-weight: bold;
-                background-color: #151521;
-                border-radius: 8px;
-                padding: 10px;
-                border: 1px solid #2B2B40;
-            }
-            QPushButton {
-                background-color: #3D5AFE;
-                color: white;
-                border-radius: 6px;
-                padding: 10px 18px;
-                font-weight: bold;
-                font-size: 14px;
-                border: none;
-            }
-            QPushButton:hover { background-color: #536DFE; }
-            QPushButton:pressed { background-color: #304FFE; }
-            QPushButton:disabled { background-color: #2B2B40; color: #5C5C70; }
-            
-            QComboBox {
-                background-color: #151521;
-                color: white;
-                border: 1px solid #2B2B40;
-                border-radius: 6px;
-                padding: 8px;
-                font-size: 14px;
-                min-width: 120px;
-            }
-            QComboBox::drop-down { border: none; }
-            
-            QSlider::groove:horizontal {
-                border: 1px solid #2B2B40;
-                height: 8px;
-                background: #151521;
-                border-radius: 4px;
-            }
-            QSlider::handle:horizontal {
-                background: #3D5AFE;
-                width: 18px;
-                margin-top: -5px;
-                margin-bottom: -5px;
-                border-radius: 9px;
-            }
-            QSlider::handle:horizontal:disabled { background: #5C5C70; }
-        """)
+    def apply_theme(self):
+        """Comută stilul întregii aplicații și al elementelor 3D"""
+        if self.is_dark_mode:
+            self.setStyleSheet(self.DARK_STYLE)
+            self.view.setBackgroundColor(18, 18, 18)
+            if hasattr(self, 'grid'): self.grid.setColor((255, 255, 255, 40))
+            if hasattr(self, 'btn_theme'): self.btn_theme.setText("☀️ Mod Luminos")
+        else:
+            self.setStyleSheet(self.LIGHT_STYLE)
+            self.view.setBackgroundColor(235, 235, 240) # Gri deschis pentru vizibilitate la soare
+            if hasattr(self, 'grid'): self.grid.setColor((0, 0, 0, 50)) # Linii grid închise la culoare
+            if hasattr(self, 'btn_theme'): self.btn_theme.setText("🌙 Mod Întunecat")
+
+    def toggle_theme(self):
+        self.is_dark_mode = not self.is_dark_mode
+        self.apply_theme()
 
     def init_ui(self):
         central_widget = QWidget()
@@ -115,7 +99,6 @@ class Telemetry3D(QMainWindow):
 
         # --- Bara de Status (Jos) ---
         self.status_bar = QStatusBar()
-        self.status_bar.setStyleSheet("color: #8A8D93; background-color: #121212; border-top: 1px solid #2B2B40;")
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Sistem inițializat. Așteptare conexiune...")
 
@@ -129,6 +112,10 @@ class Telemetry3D(QMainWindow):
         self.refresh_ports()
         self.btn_connect = QPushButton("Conectare")
         self.btn_connect.clicked.connect(self.toggle_connection)
+        
+        # Buton pentru schimbarea temei (White/Dark)
+        self.btn_theme = QPushButton("☀️ Mod Luminos")
+        self.btn_theme.clicked.connect(self.toggle_theme)
         
         self.btn_record = QPushButton("Start Inregistrare")
         self.btn_record.clicked.connect(self.toggle_recording)
@@ -149,14 +136,15 @@ class Telemetry3D(QMainWindow):
         top_layout.addWidget(QLabel("PORT SERIAL:"))
         top_layout.addWidget(self.port_combo)
         top_layout.addWidget(self.btn_connect)
-        top_layout.addSpacing(30)
+        top_layout.addWidget(self.btn_theme) # Adăugat lângă conectare
+        top_layout.addSpacing(20)
         
         # Linie despărțitoare verticală
         v_line = QFrame()
+        v_line.setObjectName("VLine")
         v_line.setFrameShape(QFrame.VLine)
-        v_line.setStyleSheet("color: #2B2B40;")
         top_layout.addWidget(v_line)
-        top_layout.addSpacing(30)
+        top_layout.addSpacing(20)
         
         top_layout.addWidget(QLabel("REPLAY DATE:"))
         top_layout.addWidget(self.file_selector)
@@ -164,7 +152,7 @@ class Telemetry3D(QMainWindow):
         top_layout.addWidget(QLabel("VITEZĂ:"))
         top_layout.addWidget(self.speed_combo)
         top_layout.addStretch()
-        top_layout.addWidget(self.btn_record) # Punem butonul de REC la capăt
+        top_layout.addWidget(self.btn_record) 
 
         main_layout.addWidget(top_frame)
 
@@ -181,7 +169,7 @@ class Telemetry3D(QMainWindow):
         self.tele_panel.setSpacing(15)
         
         header_lbl = QLabel("DATE TELEMETRIE")
-        header_lbl.setStyleSheet("font-size: 16px; font-weight: bold; color: white; margin-bottom: 10px;")
+        header_lbl.setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         header_lbl.setAlignment(Qt.AlignCenter)
         self.tele_panel.addWidget(header_lbl)
         
@@ -196,12 +184,10 @@ class Telemetry3D(QMainWindow):
 
         # Viewport 3D (Card Dreapta)
         view_frame = QFrame()
-        # view_frame.setObjectName("Card")
         view_layout = QVBoxLayout(view_frame)
         view_layout.setContentsMargins(2, 2, 2, 2)
 
         self.view = gl.GLViewWidget()
-        self.view.setBackgroundColor(18, 18, 18) # Deep dark pentru 3D
         self.view.setCameraPosition(distance=30, elevation=20, azimuth=45)
         view_layout.addWidget(self.view)
         
@@ -216,7 +202,7 @@ class Telemetry3D(QMainWindow):
         
         self.lbl_frames = QLabel("CADRU: 0 / 0")
         self.lbl_frames.setFixedWidth(150)
-        self.lbl_frames.setStyleSheet("font-family: 'Consolas', monospace; color: #8A8D93;")
+        self.lbl_frames.setStyleSheet("font-family: 'Consolas', monospace;")
         
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setEnabled(False)
@@ -255,13 +241,11 @@ class Telemetry3D(QMainWindow):
 
     def setup_3d_environment(self):
         """Adaugă grid și axe ajutătoare în scena 3D"""
-        grid = gl.GLGridItem()
-        grid.setSize(30, 30)
-        grid.setSpacing(2, 2)
-        grid.translate(0, 0, -2) 
-        # Culoare subtilă pentru grid
-        grid.setColor((255, 255, 255, 40)) 
-        self.view.addItem(grid)
+        self.grid = gl.GLGridItem()
+        self.grid.setSize(30, 30)
+        self.grid.setSpacing(2, 2)
+        self.grid.translate(0, 0, -2) 
+        self.view.addItem(self.grid)
 
         # Adăugare axe de coordonate (X=Roșu, Y=Verde, Z=Albastru)
         axis = gl.GLAxisItem()
@@ -280,14 +264,14 @@ class Telemetry3D(QMainWindow):
             self.plane = gl.GLMeshItem(
                 vertexes=verts, 
                 faces=np.arange(len(verts)).reshape(-1, 3), 
-                color=(0.24, 0.35, 1.0, 0.9), # Culoare #3D5AFE translucid
+                color=(0.1, 0.4, 0.9, 0.9), # Albastru intens, vizibil pe ambele fundaluri
                 shader='shaded', smooth=True
             )
             self.view.addItem(self.plane)
         except Exception as e:
             self.status_bar.showMessage(f"Avertisment: Model STL lipsă. Se folosește un cub de test. Eroare: {e}", 10000)
             self.plane = gl.GLBoxItem(color=(255, 23, 68, 200)) # Roșu
-            self.plane.translate(-0.5, -0.5, -0.5) # Centrare vizuală cub
+            self.plane.translate(-0.5, -0.5, -0.5) 
             self.view.addItem(self.plane)
 
     # --- Logica de Operare ---
@@ -307,7 +291,7 @@ class Telemetry3D(QMainWindow):
             try:
                 self.serial_conn = serial.Serial(self.port_combo.currentText(), 115200, timeout=0.001)
                 self.btn_connect.setText("Deconectare")
-                self.btn_connect.setStyleSheet("background-color: #FF1744;") # Buton roșu la deconectare
+                self.btn_connect.setStyleSheet("background-color: #FF1744; color: white;") 
                 self.btn_record.setEnabled(True)
                 self.is_replaying = False
                 self.slider.setEnabled(False)
@@ -321,7 +305,7 @@ class Telemetry3D(QMainWindow):
             self.serial_conn.close()
             self.serial_conn = None
             self.btn_connect.setText("Conectare")
-            self.btn_connect.setStyleSheet("") # Revine la stilul default din CSS
+            self.btn_connect.setStyleSheet("") 
             self.btn_record.setEnabled(False)
             self.status_bar.showMessage("Deconectat.")
 
@@ -330,7 +314,7 @@ class Telemetry3D(QMainWindow):
             self.recorded_data = []
             self.is_recording = True
             self.btn_record.setText("Stop Inregistrare")
-            self.btn_record.setStyleSheet("background-color: #FF1744; color: white;") # Roșu aprins
+            self.btn_record.setStyleSheet("background-color: #FF1744; color: white;") 
             self.status_bar.showMessage("Înregistrare telemetrie pornită...")
         else:
             self.is_recording = False
@@ -367,7 +351,7 @@ class Telemetry3D(QMainWindow):
                 self.slider.setMaximum(len(self.recorded_data) - 1)
                 self.slider.setValue(0)
                 self.btn_replay.setText("Stop Replay")
-                self.btn_replay.setStyleSheet("background-color: #00E676; color: #121212;") # Verde pentru Replay activ
+                self.btn_replay.setStyleSheet("background-color: #00E676; color: #121212;") 
                 self.update_speed()
                 self.timer.start()
                 self.status_bar.showMessage(f"Se redă: {filename}")
@@ -408,7 +392,6 @@ class Telemetry3D(QMainWindow):
             try:
                 raw = self.serial_conn.read(self.serial_conn.in_waiting).decode('utf-8', errors='ignore')
                 lines = raw.split('\n')
-                # Citim doar ultima linie completă pentru a nu decala UI-ul
                 for i in range(len(lines)-2, -1, -1):
                     parts = lines[i].strip().split(',')
                     if len(parts) >= 4:
@@ -419,13 +402,11 @@ class Telemetry3D(QMainWindow):
             except: pass
 
     def update_ui_elements(self, roll, pitch, alt, ts):
-        # Update text labels (doar valorile, fără text extra)
         self.val_time.setText(f"{ts/1000:.2f}")
         self.val_roll.setText(f"{roll:>.2f}")
         self.val_pitch.setText(f"{pitch:>.2f}")
         self.val_alt.setText(f"{alt:>.2f}")
         
-        # Update 3D Model
         self.plane.resetTransform()
         self.plane.rotate(-roll, 0, 1, 0) 
         self.plane.rotate(pitch, 1, 0, 0)
@@ -433,7 +414,6 @@ class Telemetry3D(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # Setare font global pentru elementele fără stil explicit
     font = app.font()
     font.setFamily("Segoe UI")
     app.setFont(font)
