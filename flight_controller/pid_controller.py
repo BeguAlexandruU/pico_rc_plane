@@ -43,7 +43,7 @@ class PID:
         return output
 
 
-ROLL_SLOPE = (90 - (-90)) / (127 - (-127))
+ROLL_SLOPE = (80 - (-80)) / (127 - (-127))
 roll_pid = None
 pitch_pid = None
 
@@ -54,28 +54,33 @@ def setup():
 
 def map_input_to_angle(x):
     # Simplified Formula: (x - in_min) * slope + out_min
-    return (x + 127) * ROLL_SLOPE - 90
+    return (x + 127) * ROLL_SLOPE - 80
 
 def update():
-    # 1. Convert NRF Stick (-127 to 127) to Target Angle (-90 to +90 degrees)
-    target_roll = map_input_to_angle(nrf_module.ch3)
-    target_pitch = map_input_to_angle(nrf_module.ch4)
-    
-    # 2. Get Actual Angles from IMU
-    current_roll = imu_module.fusion.roll
-    current_pitch = imu_module.fusion.pitch
-    
-    # 3. Compute PID correction
-    # The PID returns a value in the -127 to 127 range for your servo_control
-    aileron_output = roll_pid.compute(target_roll, -current_roll)
-    elevator_output = pitch_pid.compute(target_pitch, current_pitch)
-    
-    servo_control.set_aileron(aileron_output)
-    servo_control.set_elevator(-elevator_output)
+    if nrf_module.fly_mode == 0:  # Stabilize Mode
+        # Convert NRF Stick (-127 to 127) to Target Angle (-80 to +80 degrees)
+        target_roll = map_input_to_angle(nrf_module.ch3)
+        target_pitch = map_input_to_angle(nrf_module.ch4)
+        
+        # Get Actual Angles from IMU
+        current_roll = imu_module.fusion.roll
+        current_pitch = imu_module.fusion.pitch
+        
+        # Compute PID correction
+        # The PID returns a value in the -127 to 127 range for your servo_control
+        aileron_output = roll_pid.compute(target_roll, -current_roll)
+        elevator_output = pitch_pid.compute(target_pitch, current_pitch)
+        
+        servo_control.set_aileron(aileron_output)
+        servo_control.set_elevator(-elevator_output)
 
-    motor_control.set_throttle(nrf_module.ch2)
+        motor_control.set_throttle(nrf_module.ch2)
+    else:  # Manual Mode
+        servo_control.set_aileron(nrf_module.ch3)
+        servo_control.set_elevator(-nrf_module.ch4)
+        motor_control.set_throttle(nrf_module.ch2)
 
-    print(f"Target Roll: {target_roll:.1f} | Current Roll: {current_roll:.1f} | Aileron Output: {aileron_output:.1f}")
+    # print(f"Target Roll: {target_roll:.1f} | Current Roll: {current_roll:.1f} | Aileron Output: {aileron_output:.1f}")
 
 
 
