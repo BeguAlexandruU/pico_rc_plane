@@ -8,18 +8,20 @@
 from machine import Pin, I2C
 import utime as time
 from lib.imu import MPU6050  
-from lib.ssd1306 import SSD1306_I2C
 from lib.fusion import Fusion 
 from lib.QMC5883L import QMC5883L
 
-i2c = I2C(1, sda=Pin(14), scl=Pin(15))
+i2c = I2C(0, sda=Pin(0), scl=Pin(1))
 imu = MPU6050(i2c)
 qmc = QMC5883L(i2c)
-qmc.initialize(mode=1, rate=200, range=8, oversampling=128)
+#qmc.initialize(mode=1, rate=200, range=8, oversampling=128)
 
-switch = Pin(24, Pin.IN, pull=Pin.PULL_UP) # Switch to ground on Y7
-def sw():
-    return not switch.value()
+# --- Timer-based Calibration Setup ---
+start_cal_time = 0
+
+def auto_stop():
+    # Returns True if 10,000ms (10s) have passed since start_cal_time was set
+    return time.ticks_diff(time.ticks_ms(), start_cal_time) > 20000
 
 # oled = SSD1306_I2C(width=128, height=64, i2c=i2c, addr=0x3C)
 
@@ -30,15 +32,17 @@ Calibrate = True
 Timing = True
 
 def getmag():                               # Return (x, y, z) tuple (blocking read)
-    return qmc.read()
+    return qmc.measure()
 
 if Calibrate:
-    print("Calibrating. Press switch when done.")
-    fuse.calibrate(getmag, sw, 100)
+    print("Calibrating for 10 seconds... Please rotate the sensor in all directions.")
+    start_cal_time = time.ticks_ms()        # Capture the start time right before calibrating
+    fuse.calibrate(getmag, auto_stop, 100)  # Uses auto_stop instead of sw
+    print("Calibration complete. Magbias:")
     print(fuse.magbias)
 
 if Timing:
-    mag = qmc.read()
+    mag = qmc.measure()
     accel = imu.accel.xyz
     gyro = imu.gyro.xyz
     start = time.ticks_us()  # Measure computation time only
@@ -48,13 +52,7 @@ if Timing:
 
 count = 0
 while True:
-    fuse.update(imu.accel.xyz, imu.gyro.xyz, qmc.read())
-    if count % 5 == 0:
-        print("Heading, Pitch, Roll: {:7.3f} {:7.3f} {:7.3f}".format(fuse.heading, fuse.pitch, fuse.roll), end="\r")
-        # oled.fill(0)
-        # oled.text("H:{:7.2f}".format(fuse.heading), 0, 0)
-        # oled.text("P:{:7.2f}".format(fuse.pitch), 0, 16)
-        # oled.text("R:{:7.2f}".format(fuse.roll), 0, 32)
-        # oled.show()
-    time.sleep_ms(40)
-    count += 1
+    fuse.update(imu.accel.xyz, imu.gyro.xyz, qmc.measure())
+    
+    print("Heading, Pitch, Roll: {:7.3f} {:7.3f} {:7.3f}".format((fuse.heading-180)*-1, fuse.pitch, fuse.roll), end="\r")
+    

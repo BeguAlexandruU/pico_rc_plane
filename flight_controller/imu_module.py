@@ -1,37 +1,67 @@
-
 from machine import Pin, I2C
 import utime as time
 from lib.imu import MPU6050  
 from lib.fusion import Fusion 
 import lib.bmp085 as bmp085
+from lib.QMC5883L import QMC5883L
 
 
 imu_sensor = None
+mag_sensor = None
 fusion = None
 bmp = None
 
+baseline = 0.0
+relative_altitude = 0.0
+
+start_cal_time = 0
+
+
+def auto_stop():
+    global start_cal_time
+    return time.ticks_diff(time.ticks_ms(), start_cal_time) > 20000
+
+def get_mag():
+    global mag_sensor
+    return mag_sensor.measure()
+
 def setup():
-    global imu_sensor, fusion, bmp
+    global imu_sensor, mag_sensor, fusion, bmp, baseline, start_cal_time
     
     i2c = I2C(1, sda=Pin(14), scl=Pin(15))
     imu_sensor = MPU6050(i2c)
+    mag_sensor = QMC5883L(i2c)
 
     fusion = Fusion()
 
+    # BMP180 setup
     bmp = bmp085.BMP180(i2c)
     bmp.sealevel = 1016.0
     bmp.oversample = 2
 
-    # debug timing test
+    baseline:float = 0.0
+    for i in range(0, 5):   
+        baseline = baseline + bmp.altitude
+        time.sleep(0.1)
+    baseline = baseline / 5
+    print("Baseline altitutde: " + str(baseline) + " meters")
+
+    # Calibrate fusion for 10 seconds, then auto-stop
     accel = imu_sensor.accel.xyz
     gyro = imu_sensor.gyro.xyz
-    start = time.ticks_us()  # Measure computation time only
-    fusion.update_nomag(accel, gyro) 
-    t = time.ticks_diff(time.ticks_us(), start)
-    print("Update time (uS):", t)
+    start_cal_time = time.ticks_ms()
+    fusion.calibrate(get_mag, auto_stop, 100)
+    fusion.update(accel, gyro, mag_sensor.measure())
+
+    print("Calibration complete. Starting main loop.")
 
 def update():
-    global imu_sensor, fusion
-    
-    fusion.update_nomag(imu_sensor.accel.xyz, imu_sensor.gyro.xyz)
-    
+    global imu_sensor, mag_sensor, fusion, relative_altitude
+
+    fusion.update(imu_sensor.accel.xyz, imu_sensor.gyro.xyz, mag_sensor.measure())
+
+    relative_altitude = (relative_altitude * 0.9) + ((bmp.altitude - baseline) * 0.1)
+
+
+
+

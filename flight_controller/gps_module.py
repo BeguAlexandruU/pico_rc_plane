@@ -28,8 +28,8 @@ def update():
                     if p[4] == 'S': lat = -lat
                     if p[6] == 'W': lon = -lon
                     
-                    # Afișare curată pe o singură linie
-                    print(f"GPS: {lat:.6f}, {lon:.6f} -> https://maps.google.com/?q={lat:.6f},{lon:.6f}")
+                    # Afișare
+                    # print(f"GPS: {lat:.6f}, {lon:.6f} -> https://maps.google.com/?q={lat:.6f},{lon:.6f}")
                     
         except:
             pass

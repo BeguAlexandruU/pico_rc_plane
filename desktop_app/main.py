@@ -328,7 +328,7 @@ class Telemetry3D(QMainWindow):
         path = os.path.join(self.log_folder, fname)
         with open(path, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['roll', 'pitch', 'alt', 'ts'])
+            writer.writerow(['roll', 'pitch', 'heading', 'alt', 'gps_lat', 'gps_lon', 'timestamp'])
             writer.writerows(self.recorded_data)
         self.refresh_recordings_list()
         self.status_bar.showMessage(f"Fișier salvat: {fname}", 5000)
@@ -395,8 +395,8 @@ class Telemetry3D(QMainWindow):
                 for i in range(len(lines)-2, -1, -1):
                     parts = lines[i].strip().split(',')
                     if len(parts) >= 4:
-                        r, p, a, t = [float(x) for x in parts[:4]]
-                        if self.is_recording: self.recorded_data.append((r, p, a, t))
+                        r, p, y, a, lat, lon, t = [float(x) for x in parts[:7]]
+                        if self.is_recording: self.recorded_data.append((r, p, y, a, lat, lon, t))
                         self.update_ui_elements(r, p, a, t)
                         break
             except: pass

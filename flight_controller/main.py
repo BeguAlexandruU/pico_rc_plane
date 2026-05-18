@@ -19,10 +19,10 @@ def setup():
     motor_control.setup()
     servo_control.setup()
     
+    gps_module.setup()
     imu_module.setup()
     nrf_module.setup()
     pid_controller.setup()
-    gps_module.setup()
 
 
 setup()    

@@ -8,7 +8,7 @@ import input_module as controller
 
 # constants
 CHANNEL = 108
-PAYLOAD_SIZE = 24
+PAYLOAD_SIZE = 28
 TX_ADDR = b"node2"
 RX_ADDR = b"....."
 

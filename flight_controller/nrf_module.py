@@ -13,7 +13,7 @@ import lib.nrf24l01 as nrf24l01
 
 # --- Configuration ---
 CHANNEL = 108           
-PAYLOAD_SIZE = 24      
+PAYLOAD_SIZE = 28      
 TX_ADDR = b"node3"
 RX_ADDR = b"node2"
 
@@ -77,10 +77,11 @@ def update():
 
         last_telemetry_time = current_time
         nrf.stop_listening()
-        payload = struct.pack("<fffffI", 
+        payload = struct.pack("<ffffffI", 
                          imu_module.fusion.roll, 
                          imu_module.fusion.pitch, 
-                         imu_module.bmp.altitude, 
+                         imu_module.fusion.heading,
+                         imu_module.relative_altitude, 
                          gps_module.lat,
                          gps_module.lon,
                          current_time)
