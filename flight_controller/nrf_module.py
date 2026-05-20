@@ -21,10 +21,10 @@ nrf = None
 last_packet_time = None
 last_telemetry_time = None
 
-ch1 = 0
-ch2 = 0
-ch3 = 0
-ch4 = 0
+ch1_rudder = 0
+ch2_throttle = 0
+ch3_aileron = 0
+ch4_elevator = 0
 fly_mode = 0  # 0: Stabilize, 1: Manual
 
 def setup():
@@ -55,7 +55,7 @@ def setup():
 
 def update():
     global nrf, last_packet_time, last_telemetry_time
-    global ch1, ch2, ch3, ch4, fly_mode
+    global ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode
     
     current_time = utime.ticks_ms()
   
@@ -65,36 +65,39 @@ def update():
         
         # Unpack RC Channels
         try:
-            ch1, ch2, ch3, ch4, fly_mode = struct.unpack("<bBbbB", data)
-            # print("Received Channels:", ch1, ch2, ch3, ch4)
+            ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode = struct.unpack("<bBbbB", data)
+            # print("Received Channels:", ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode)
             # Use channel[0], channel[1] etc for servos/motors
 
         except:
-            print("Failed to unpack data")
+            print("Received malformed packet")
         
     # Send telemetry 5Hz
     if utime.ticks_diff(current_time, last_telemetry_time) > 200:
 
-        last_telemetry_time = current_time
-        nrf.stop_listening()
-        payload = struct.pack("<ffffffI", 
-                         imu_module.fusion.roll, 
-                         imu_module.fusion.pitch, 
-                         imu_module.fusion.heading,
-                         imu_module.relative_altitude, 
-                         gps_module.lat,
-                         gps_module.lon,
-                         current_time)
-        nrf.send(payload)
+        try:
+            last_telemetry_time = current_time
+            nrf.stop_listening()
+            payload = struct.pack("<ffffffI", 
+                            imu_module.fusion.roll, 
+                            imu_module.fusion.pitch, 
+                            imu_module.fusion.heading,
+                            imu_module.relative_altitude, 
+                            gps_module.lat,
+                            gps_module.lon,
+                            current_time)
+            nrf.send(payload)
+        except:
+            print("Failed to send telemetry")
         nrf.start_listening()
 
     # FAILSAFE Logic: If no packet for 1000ms, cut the motors
     if utime.ticks_diff(current_time, last_packet_time) > 1000:
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
-        ch1 = 0
-        ch2 = 0
-        ch3 = 0
-        ch4 = 0
+        ch1_rudder = 0
+        ch2_throttle = 0
+        ch3_aileron = 0
+        ch4_elevator = 0
         fly_mode = 0
 
 
