@@ -96,8 +96,9 @@ def update():
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
         ch1_rudder = 0
         ch2_throttle = 0
-        ch3_aileron = 0
+        ch3_aileron = 10
         ch4_elevator = 0
         fly_mode = 0
+
 
 

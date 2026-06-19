@@ -5,6 +5,7 @@ import pid_controller
 import servo_control
 import gps_module
 import utime
+import machine
 
 # ==== for me
 # gpio 28 
@@ -12,6 +13,8 @@ import utime
 # gpio 26
 # gpio 22
 
+machine.freq(250000000)
+    
 LOOP_FREQ = 100 # Hz
 TARGET_PERIOD = 1_000_000 // LOOP_FREQ # microseconds
 
@@ -27,7 +30,7 @@ def setup():
 
 setup()    
 
-# last_time = utime.ticks_us()
+last_time = utime.ticks_us()
 while True:
     
     # # 1. Calculate Delta Time

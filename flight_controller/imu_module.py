@@ -46,21 +46,22 @@ def setup():
     baseline = baseline / 5
     print("Baseline altitutde: " + str(baseline) + " meters")
 
-    # Calibrate fusion for 10 seconds, then auto-stop
+def calibrate_mag():
+    global fusion, start_cal_time
     accel = imu_sensor.accel.xyz
     gyro = imu_sensor.gyro.xyz
-    start_cal_time = time.ticks_ms()
     fusion.calibrate(get_mag, auto_stop, 100)
     fusion.update(accel, gyro, mag_sensor.measure())
-
-    print("Calibration complete. Starting main loop.")
+    print("Calibration complete.")
 
 def update():
     global imu_sensor, mag_sensor, fusion, relative_altitude
 
-    fusion.update(imu_sensor.accel.xyz, imu_sensor.gyro.xyz, mag_sensor.measure())
+    #fusion.update(imu_sensor.accel.xyz, imu_sensor.gyro.xyz, mag_sensor.measure())
+    fusion.update_nomag(imu_sensor.accel.xyz, imu_sensor.gyro.xyz)
 
     relative_altitude = (relative_altitude * 0.9) + ((bmp.altitude - baseline) * 0.1)
+
 
 
 
