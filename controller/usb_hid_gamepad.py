@@ -1,5 +1,4 @@
 import usb_hid
-import time
 from hid_gamepad import Gamepad
 import input_module as controller
 import state_control
@@ -13,13 +12,13 @@ def setup():
 def send_usb_message():
     global gp
     
-    # 1. Read Joysticks with Deadzone
+    # Read Joysticks with Deadzone
     jx1, jy1, jx2, jy2 = controller.get_axis_hid_format()
     
-    # 2. Update movement
+    # Update movement
     gp.move_joysticks(x=jx1, y=jy1*-1, z=jx2*-1, r_z=jy2*-1)
 
-    # 3. Handle Buttons
+    # Handle Buttons
     while True:
         event = controller.keys.events.get()
         if not event:

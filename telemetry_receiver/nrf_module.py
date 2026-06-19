@@ -60,10 +60,9 @@ def update():
         except:
             print("Failed to unpack data")
         
-      
-    # FAILSAFE Logic: If no packet for 1000ms, cut the motors!
+    
+    # FAILSAFE
     if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
-        # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
         print("NO SIGNAL")
 
         pass

@@ -14,10 +14,10 @@ RX_ADDR = b"....."
 
 nrf = None
 
-# debug variables
-packets_sent = 0
-packets_success = 0
-start_time = time.monotonic()
+# # debug variables
+# packets_sent = 0
+# packets_success = 0
+# start_time = time.monotonic()
 
 # control variables
 armed = True
@@ -76,25 +76,3 @@ def send_message():
     payload = struct.pack("<bBbbB", jx1, jy1, max(-127, min(127, int(jx2-trim_roll))), max(-127, min(127, int(jy2+trim_pitch))), fly_mode)
     
     result = nrf.send(payload)
-    
-        
-    # # 3. Statistici la fiecare secundă 
-    # packets_sent += 1
-    
-    # if result:
-    #     packets_success += 1
-    # if time.monotonic() - start_time > 1.0:
-    #     print(f"Status: {packets_sent} PPS | Trimis cu succes: {result}")
-    #     packets_sent = 0
-    #     start_time = time.monotonic()
-
-# # Rulare
-# if __name__ == "__main__":
-
-#     setup()
-    
-#     # În CircuitPython, nrf.listen controlează dacă e în mod RX sau TX
-#     print("RC Transmitter Mode Started (CircuitPython)...")
-    
-#     while True:
-#         send_message()

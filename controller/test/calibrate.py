@@ -10,7 +10,7 @@ max_val = 0
 
 print("Rotate the stick in full circles now...")
 
-for _ in range(500): # Measure for about 5 seconds
+for _ in range(500): 
     val = ax.value
     if val < min_val: min_val = val
     if val > max_val: max_val = val

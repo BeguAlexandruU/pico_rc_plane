@@ -1,6 +1,6 @@
 import menu_module
 
-# --- 5. STATE MACHINE ---
+# --- STATE MACHINE ---
 STATE_MENU = 0
 STATE_FLY = 1
 STATE_USB = 2

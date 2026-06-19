@@ -11,6 +11,16 @@ import lib.nrf24l01 as nrf24l01
 # ch3 = aileron
 # ch4 = elevator
 
+# Telemetry Packet Structure:
+# float roll
+# float pitch  
+# float heading
+# float relative_altitude
+# float gps_lat
+# float gps_lon
+# uint32 timestamp (ms since boot)
+
+
 # --- Configuration ---
 CHANNEL = 108           
 PAYLOAD_SIZE = 28      
@@ -91,7 +101,7 @@ def update():
             print("Failed to send telemetry")
         nrf.start_listening()
 
-    # FAILSAFE Logic: If no packet for 1000ms, cut the motors
+    # FAILSAFE: If no packet for 1000ms
     if utime.ticks_diff(current_time, last_packet_time) > 1000:
         # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
         ch1_rudder = 0

@@ -17,7 +17,7 @@ from adafruit_ina219 import INA219
 # STATE_FLY = 1
 # STATE_USB = 2
 # current_state = STATE_MENU
-menu_index = 0 # 0 for Fly, 1 for USB
+menu_index = 0
 
 # UI GROUPS
 main_group = None
@@ -36,7 +36,7 @@ trim_pitch_label = None
 
 usb_label = None
 
-# Data Variables (Simulated)
+# Data Variables
 pitch_value = 0
 roll_value = 0
 last_display_update = time.monotonic()
