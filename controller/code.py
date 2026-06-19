@@ -63,8 +63,8 @@ if __name__ == "__main__":
                 
                 elif event.key_number == controller.SW_ARM: # Switch ARM
                     if state_control.current_state == state_control.STATE_FLY:
-                        menu_module.arm_label.text = "ARMED"
-                        rc_controller.armed = True
+                        menu_module.arm_label.text = "DISARMED"
+                        rc_controller.armed = False
                         
                 elif event.key_number == controller.BTN_LT: # Switch MODE
                     if state_control.current_state == state_control.STATE_FLY:
@@ -85,5 +85,5 @@ if __name__ == "__main__":
             elif event.released:
                 if event.key_number == controller.SW_ARM: # Switch ARM
                     if state_control.current_state == state_control.STATE_FLY:
-                        menu_module.arm_label.text = "DISARMED"
-                        rc_controller.armed = False
+                        menu_module.arm_label.text = "ARMED"
+                        rc_controller.armed = True

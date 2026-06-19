@@ -46,7 +46,7 @@ def map_input_to_servo(input_val, target_min_angle, target_max_angle):
     
     return servo_value
 
-def set_aileron(input_value): # 0 to 255
+def set_aileron(input_value): # -127 to 127
     global aileron_left, aileron_right
     
     # Calculate the normalized servo value (0.0 to 1.0) for the requested angle
@@ -55,7 +55,7 @@ def set_aileron(input_value): # 0 to 255
     aileron_left.value = val
     aileron_right.value = val 
 
-def set_elevator(input_value): # 0 to 255
+def set_elevator(input_value): # -127 to 127
     global elevator
     
     # Calculate the normalized servo value (0.0 to 1.0) for the requested angle
@@ -64,6 +64,6 @@ def set_elevator(input_value): # 0 to 255
     elevator.value = val
 
 def center_all():
-    set_aileron(127)  
-    set_elevator(127)
+    set_aileron(0)  
+    set_elevator(0)
     

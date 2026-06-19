@@ -32,7 +32,7 @@ def update():
         # print(f"GPS: {line}")
         
         # if the line is not a GPRMC sentence, ignore it
-        if not line.startswith('$GPRMC'):
+        if not (line.startswith('$GPRMC') or line.startswith('$GNRMC')):
             return
             
         # Parse the GPRMC sentence

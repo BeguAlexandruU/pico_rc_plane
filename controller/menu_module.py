@@ -51,7 +51,7 @@ def setup():
     # usb_gamepad.setup()
     # rc_controller.setup()
 
-    # --- 1. MODERN DISPLAY SETUP ---
+    # --- DISPLAY SETUP ---
     displayio.release_displays()
     i2c = busio.I2C(board.GP1, board.GP0)
 
@@ -59,10 +59,10 @@ def setup():
     display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
     display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=64)
 
-    # --- 2. SENSOR SETUP ---
-    ina219 = INA219(i2c) # sensor for voltage/current monitoring
+    # --- SENSOR SETUP ---
+    ina219 = INA219(i2c)
 
-    # --- 3. UI GROUPS ---
+    # --- UI GROUPS ---
     main_group = displayio.Group()
     menu_group = displayio.Group()
     fly_group = displayio.Group()
@@ -70,17 +70,17 @@ def setup():
 
     display.root_group = main_group
 
-    # --- 4. PRE-BUILD THE SCREENS ---
+    # --- PRE-BUILD THE SCREENS ---
 
     # Setup Menu
     menu_label = bitmap_label.Label(terminalio.FONT, text="> Fly Mode\n  USB Mode", x=10, y=20, line_spacing=1.5)
     menu_group.append(menu_label)
 
-    # Setup Fly Mode (Using specific labels we can update individually)
+    # Setup Fly Mode
     power_label = bitmap_label.Label(terminalio.FONT, text="0 V", x=8, y=8)
     power_label.anchor_point = (1.0, 0)
     power_label.anchored_position = (120, 0)
-    arm_label = bitmap_label.Label(terminalio.FONT, text="ARMED", x=8, y=8)
+    arm_label = bitmap_label.Label(terminalio.FONT, text="DISARMED", x=8, y=8)
     mode_label = bitmap_label.Label(terminalio.FONT, text="Mode: STABILIZE", x=8, y=20)
     trim_roll_label = bitmap_label.Label(terminalio.FONT, text="Trim Roll: 0", x=8, y=32)
     trim_pitch_label = bitmap_label.Label(terminalio.FONT, text="Trim Pitch: 0", x=8, y=44)

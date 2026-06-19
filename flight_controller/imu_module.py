@@ -13,12 +13,13 @@ bmp = None
 
 baseline = 0.0
 relative_altitude = 0.0
+_alt_counter = 0
 
 start_cal_time = 0
-calibrated = False
+mag_calibrated = False
 
 def setup():
-    global imu_sensor, mag_sensor, fusion, bmp, baseline, start_cal_time, calibrated
+    global imu_sensor, mag_sensor, fusion, bmp, baseline, start_cal_time, mag_calibrated, _alt_counter, relative_altitude
     
     i2c = I2C(1, sda=Pin(14), scl=Pin(15))
     imu_sensor = MPU6050(i2c)
@@ -27,13 +28,15 @@ def setup():
     fusion = Fusion()
 
     # calibrate magnetometer
-    calibrated = False
+    mag_calibrated = False
     calibrate_mag()  
 
     # BMP180 setup
     bmp = bmp085.BMP180(i2c)
     bmp.sealevel = 1016.0
     bmp.oversample = 2
+    _alt_counter = 0
+    relative_altitude = 0.0
 
     baseline:float = 0.0
     for i in range(0, 5):   
@@ -51,23 +54,29 @@ def get_mag():
     return mag_sensor.measure()
 
 def calibrate_mag():
-    global fusion, start_cal_time, calibrated, imu_sensor, mag_sensor
+    global fusion, start_cal_time, mag_calibrated, imu_sensor, mag_sensor
     accel = imu_sensor.accel.xyz
     gyro = imu_sensor.gyro.xyz
     fusion.calibrate(get_mag, auto_stop, 100)
     fusion.update(accel, gyro, mag_sensor.measure())
-    calibrated = True
+    mag_calibrated = True
     print("Calibration complete.")
 
 def update():
-    global imu_sensor, mag_sensor, fusion, relative_altitude
+    global imu_sensor, mag_sensor, fusion, mag_calibrated, _alt_counter
     
-    if calibrated:
+    # 
+    if mag_calibrated:
         fusion.update(imu_sensor.accel.xyz, imu_sensor.gyro.xyz, mag_sensor.measure())
     else:
         fusion.update_nomag(imu_sensor.accel.xyz, imu_sensor.gyro.xyz)
 
-    relative_altitude = (relative_altitude * 0.9) + ((bmp.altitude - baseline) * 0.1)
+    # 
+    _alt_counter += 1
+    if _alt_counter % 5 == 0:   # ~20 Hz
+        global relative_altitude, baseline, bmp
+        relative_altitude = (relative_altitude * 0.9) + ((bmp.altitude - baseline) * 0.1)
+        _alt_counter = 0
 
 
 

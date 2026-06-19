@@ -75,7 +75,7 @@ def update():
         
         # Unpack RC Channels
         try:
-            ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode = struct.unpack("<bBbbB", data)
+            ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode = struct.unpack("<bBbbB", data[:5])
             # print("Received Channels:", ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode)
             # Use channel[0], channel[1] etc for servos/motors
 

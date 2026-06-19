@@ -12,17 +12,17 @@ class PID:
         self.kd = kd
         self._limits = output_limits
 
-        self.last_error = 0
+        self._last_error = 0
+        self._last_input = 0
+        self._last_output = 0
         self._integral = 0
-        self.last_time = time.ticks_ms()
-
-    def reset_integral(self):
-        self._integral = 0
+        self._last_time = time.ticks_ms()
 
     def compute(self, setpoint, actual):
         now = time.ticks_ms()
-        dt = time.ticks_diff(now, self.last_time) / 1000.0
-        if dt <= 0: return self.last_error # Prevent division by zero
+        dt = time.ticks_diff(now, self._last_time) / 1000.0
+        if dt <= 0.001: 
+            return self._last_output 
 
         error = setpoint - actual
         
@@ -34,16 +34,26 @@ class PID:
         self._integral = max(self._limits[0], min(self._limits[1], self._integral))
         
         # Derivative
-        d = self.kd * (error - self.last_error) / dt
+        d = self.kd * (error - self._last_input) / dt
         
         output = p + self._integral + d
         
         # Apply limits (-127 to 127)
         output = max(self._limits[0], min(self._limits[1], output))
         
-        self.last_error = error
-        self.last_time = now
+        self._last_error = error
+        self._last_time = now
+        self._last_output = output
+        self._last_input = actual
         return output
+
+    def reset_integral(self):
+        self._integral = 0
+
+    def reset(self):
+        self._integral = 0
+        self._last_input = 0
+        self._last_time = time.ticks_ms()
 
 
 ROLL_SLOPE = (80 - (-80)) / (127 - (-127))

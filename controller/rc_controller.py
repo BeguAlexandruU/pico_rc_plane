@@ -20,7 +20,7 @@ nrf = None
 # start_time = time.monotonic()
 
 # control variables
-armed = True
+armed = False
 fly_mode = 0  # 0: Stabilize, 1: Manual
 trim_roll = 0
 trim_pitch = 0
@@ -66,7 +66,7 @@ def send_message():
     global packets_sent, packets_success, start_time # debug
     
     jx1, jy1, jx2, jy2 = controller.get_axis_rc_format()
-    if armed:
+    if not armed:
         jy1 = 0
     
     # map controll
