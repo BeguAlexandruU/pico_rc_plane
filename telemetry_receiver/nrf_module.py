@@ -11,6 +11,7 @@ RX_ADDR = b"node3"
 
 nrf = None
 last_packet_time = None
+_signal_lost = False
 
 roll = 0.0
 pitch = 0.0
@@ -45,24 +46,20 @@ def setup():
     last_packet_time = utime.ticks_ms()
 
 def update():
-    global nrf, last_packet_time
-    global roll, pitch, heading, alt, timestamp
-  
+    global nrf, last_packet_time, _signal_lost
+    global roll, pitch, heading, alt, gps_lat, gps_lon, timestamp
+
     if nrf.any():
         data = nrf.recv()
         last_packet_time = utime.ticks_ms()
-        
-        # Unpack RC Channels
+        _signal_lost = False
         try:
             roll, pitch, heading, alt, gps_lat, gps_lon, timestamp = struct.unpack("<ffffffI", data)
             print(f"{roll},{pitch},{heading},{alt},{gps_lat},{gps_lon},{timestamp}")
-
         except:
-            print("Failed to unpack data")
-        
-    
-    # FAILSAFE
-    if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
-        print("NO SIGNAL")
+            pass
 
-        pass
+    if utime.ticks_diff(utime.ticks_ms(), last_packet_time) > 1000:
+        if not _signal_lost:
+            print("NO SIGNAL")
+            _signal_lost = True

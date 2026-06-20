@@ -1,372 +1,542 @@
-# Pico RC Plane
+# Pico RC Plane — Wireless RC Aircraft with Onboard Autopilot
 
-A multi-part Raspberry Pi Pico RC aircraft system with wireless control, onboard flight automation, telemetry, and a desktop ground station.
+A complete RC aircraft control system built on Raspberry Pi Pico microcontrollers, featuring 2.4 GHz wireless control, onboard PID-based attitude stabilization, multi-sensor fusion, GPS telemetry, and a Python desktop ground control station.
 
-## Overview
+---
 
-This repository includes three main systems:
+## Table of Contents
 
-- `controller/`: Pico-based RC transmitter and input menu system with USB HID and nRF24L01 wireless command transmission.
-- `flight_controller/`: Pico flight stack with IMU/GPS/barometer sensors, PID control, motor/servo drivers, and nRF24L01 telemetry.
-- `telemetry_receiver/`: companion nRF24L01 receiver for telemetry forwarding and logging.
-- `desktop_app/`: Python/PyQt ground control station for live telemetry visualization, recording, and replay.
+1. [System Overview](#system-overview)
+2. [Architecture](#architecture)
+3. [Hardware Components](#hardware-components)
+4. [Subsystem Descriptions](#subsystem-descriptions)
+   - [Transmitter Controller](#transmitter-controller)
+   - [Flight Controller](#flight-controller)
+   - [Telemetry Receiver](#telemetry-receiver)
+   - [Desktop Ground Station](#desktop-ground-station)
+5. [Wireless Communication Protocol](#wireless-communication-protocol)
+6. [Flight Control Algorithm (PID)](#flight-control-algorithm-pid)
+7. [Sensor Fusion](#sensor-fusion)
+8. [Installation and Setup](#installation-and-setup)
+9. [Pin Reference](#pin-reference)
+10. [Technical Specifications](#technical-specifications)
+11. [Known Limitations](#known-limitations)
 
-## Key Features
+---
 
-- 2.4 GHz nRF24L01 command and telemetry link (250 kbps, MAX power)
-- Flight modes: **Stabilize** (PID-assisted attitude control) and **Manual** (direct stick control)
-- Telemetry logging and replay support with CSV export
-- USB HID gamepad compatibility for ground testing
-- Onboard sensor fusion (MPU6050 + QMC5883L) for roll/pitch/heading
-- Barometric altitude hold capability (BMP180)
-- GPS position telemetry support (NMEA GPRMC/GNRMC)
-- Ground station with live 3D visualization, map display, and dark/light UI themes
-- 100 Hz flight control loop with PID-based attitude stabilization
+## System Overview
 
-## Repository Structure
+The system consists of four interconnected components operating across two physical devices (Pico microcontrollers) and a PC:
 
-- `controller/`
-  - `code.py`: transmitter runtime loop with menu management
-  - `rc_controller.py`: nRF24L01 command transmitter (250 kbps, MAX power)
-  - `input_module.py`: 4x analog joystick (GP27, GP29, GP28, GP26) and 8x button inputs
-  - `menu_module.py`, `state_control.py`: UI mode and flight mode state management
-  - `usb_hid_gamepad.py`: USB gamepad emulation for ground testing
-  - `hid_gamepad.py`: HID protocol implementation
-
-- `flight_controller/`
-  - `main.py`: 100 Hz flight loop running sensor updates, PID control, and telemetry transmission
-  - `nrf_module.py`: nRF24L01 receiver for RC commands and telemetry transmitter (roll, pitch, heading, altitude, GPS, timestamp)
-  - `imu_module.py`: MPU6050 + QMC5883L sensor fusion (Fusion library) for roll/pitch/heading
-  - `gps_module.py`: UART0 (9600 baud) GPS receiver parsing GPRMC/GNRMC sentences
-  - `motor_control.py`: PWM motor control on GP28 (50 Hz, throttle 0-255)
-  - `servo_control.py`: 3x servo outputs (Aileron Left=GP26, Aileron Right=GP27, Elevator=GP22) with ±30° flight limits
-  - `pid_controller.py`: Roll/Pitch stabilization PID controllers (Roll: Kp=1.2, Ki=0.2, Kd=0.05; Pitch: Kp=1.0, Ki=0.1, Kd=0.05)
-  - `lib/`: MPU6050, QMC5883L, BMP180 sensor drivers; Fusion algorithm; nRF24L01 library; picozero servo abstraction
-
-- `telemetry_receiver/`
-  - `main.py`: dedicated telemetry receiver loop
-  - `nrf_module.py`: nRF24L01 telemetry receiver logic
-
-- `desktop_app/`
-  - `main.py`: PyQt5-based ground control station with live telemetry display, 3D GLWidget, folium map, recording/replay
-  - `requirements.txt`: Python 3.10+ dependencies (PyQt5, numpy, folium, pyqtgraph, numpy-stl, pyserial)
-  - `telemetry_logs/`: saved CSV flight recordings for replay and analysis
-  - `plane_models/`: 3D STL model assets for visualization
-
-## Requirements
-
-### Desktop Application
-- Python 3.10+
-- Dependencies: PyQt5, numpy, folium, pyqtgraph, numpy-stl, pyserial (see `desktop_app/requirements.txt`)
-
-### Embedded Systems
-- Raspberry Pi Pico boards (RP2040)
-- **Controller Pico**: CircuitPython with nRF24L01, board, busio, digitalio, analogio libraries
-- **Flight Controller Pico**: MicroPython with nRF24L01 support
-- **Telemetry Receiver Pico**: MicroPython with nRF24L01 support
-
-### Hardware
-- 3× nRF24L01+ modules (or nRF24L01 with external antenna for longer range)
-- IMU/Compass: MPU6050 (6-axis accelerometer + gyroscope)
-- Compass: QMC5883L (3-axis magnetometer)
-- Barometer: BMP180 (pressure/altitude sensor)
-- GPS: UART-based module (9600 baud, NMEA GPRMC/GNRMC format)
-- Motor: ESC (electronic speed controller) with PWM input
-- Servos: 3× analog servos (0.5-2.5 ms pulse width) for aileron (left/right) and elevator
-- I2C Sensors: MPU6050, QMC5883L, BMP180 on I2C1 (SDA=GP14, SCL=GP15)
-
-## nRF24L01 Radio Configuration
-
-### Connection Summary
-
-**Transmitter Pico** (`controller/rc_controller.py`):
-- SPI pins: GP10 (SCK), GP11 (MOSI), GP12 (MISO), GP9 (CSN), GP8 (CE)
-
-**Flight Controller Pico** (`flight_controller/nrf_module.py`):
-- SPI pins: GP18 (SCK), GP19 (MOSI), GP16 (MISO), GP17 (CSN), GP20 (CE)
-
-**Common Settings**:
-- Channel: 108
-- Data Rate: 250 kbps (lowest, longest range)
-- Power Level: MAX (0 dBm)
-- Payload Size: 28 bytes
-- Auto-ACK: Disabled
-- TX Address: `b"node2"`
-- RX Address: `b"node3"`
-
-### Payload Formats
-
-#### RC Command Payload (Transmitter → Flight Controller)
-
-The controller sends a 28-byte command packet every control loop iteration:
-
-```python
-struct.pack("<bBbbB", jx1, jy1, jx2_trimmed, jy2_trimmed, fly_mode)
+```
+┌─────────────────┐    2.4 GHz RF    ┌──────────────────────┐
+│   TRANSMITTER   │ ───────────────► │   FLIGHT CONTROLLER  │
+│  (CircuitPython)│  RC commands     │    (MicroPython)     │
+│  Raspberry Pi   │  28 bytes/packet │   Raspberry Pi Pico  │
+│  Pico           │                  │                      │
+│                 │ ◄─────────────── │  IMU + GPS + Baro    │
+└─────────────────┘  telemetry 5 Hz  │  Servos + ESC        │
+                                     └──────────┬───────────┘
+                                                │ telemetry
+                                                │ (NRF24L01)
+                                     ┌──────────▼───────────┐
+                                     │  TELEMETRY RECEIVER  │
+                                     │   (MicroPython)      │
+                                     │   Raspberry Pi Pico  │
+                                     └──────────┬───────────┘
+                                                │ USB serial
+                                                │ CSV stream
+                                     ┌──────────▼───────────┐
+                                     │   DESKTOP GCS        │
+                                     │   (Python / PyQt5)   │
+                                     │  Live display        │
+                                     │  Recording & Replay  │
+                                     └──────────────────────┘
 ```
 
-- `jx1`: signed byte (-127 to +127), channel 1 / rudder control
-- `jy1`: unsigned byte (0 to 255), channel 2 / throttle
-- `jx2_trimmed`: signed byte (-127 to +127), channel 3 / aileron (roll) after trim
-- `jy2_trimmed`: signed byte (-127 to +127), channel 4 / elevator (pitch) after trim
-- `fly_mode`: unsigned byte, 0=Stabilize, 1=Manual
+---
 
-Decoded by `flight_controller/nrf_module.py`:
+## Architecture
 
-```python
-ch1, ch2, ch3, ch4, fly_mode = struct.unpack("<bBbbB", data)
+### Communication Flow
+
+| Link | Direction | Protocol | Rate | Payload |
+|------|-----------|----------|------|---------|
+| Transmitter → Flight Controller | RC Commands | NRF24L01, 250 kbps | ~50 Hz | 5 bytes |
+| Flight Controller → Telemetry Receiver | Sensor Data | NRF24L01, 250 kbps | 5 Hz | 28 bytes |
+| Telemetry Receiver → PC | CSV Serial | USB-CDC, 115200 baud | 5 Hz | ~60 bytes/line |
+
+### Flight Control Loop
+
+The flight controller runs a fixed-rate control loop at 100 Hz on the Raspberry Pi Pico (RP2040 @ 250 MHz):
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  100 Hz Control Loop (10 ms period)                             │
+│                                                                 │
+│  1. NRF receive → decode RC stick commands                      │
+│  2. IMU update  → sensor fusion → roll, pitch, heading          │
+│  3. PID update  → compute servo corrections (Stabilize mode)    │
+│  4. GPS update  → parse NMEA, update lat/lon (non-blocking)     │
+│  5. Sleep remaining time to maintain exactly 100 Hz             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### Telemetry Payload (Flight Controller → Ground Station)
+---
 
-The flight controller sends a 28-byte telemetry packet at approximately 5 Hz:
+## Hardware Components
 
-```python
-struct.pack("<fffffffff", roll, pitch, heading, relative_altitude, lat, lon, gps_accuracy, reserved, timestamp_ms)
-```
+### Transmitter (Controller Pico)
 
-- `roll`: 4-byte float (-180 to +180 degrees)
-- `pitch`: 4-byte float (-90 to +90 degrees)
-- `heading`: 4-byte float (0 to 360 degrees, from magnetometer)
-- `relative_altitude`: 4-byte float (meters above baseline)
-- `lat`: 4-byte float (latitude in decimal degrees)
-- `lon`: 4-byte float (longitude in decimal degrees)
-- Additional fields padded to 28 bytes
+| Component | Part | Interface |
+|-----------|------|-----------|
+| Microcontroller | Raspberry Pi Pico (RP2040) | — |
+| RF Module | nRF24L01+ | SPI0 |
+| Joysticks | 2× dual-axis analog (4 ADC channels) | GP26–GP29 |
+| Buttons | 8× digital inputs | GP2–GP7, GP14, GP15 |
+| Display | SSD1306 OLED 128×64 | I2C (GP0 SDA, GP1 SCL) |
+| Power Monitor | INA219 | I2C |
 
-## Desktop App Setup
+### Flight Controller Pico
 
-### Prerequisites
-- Python 3.10 or higher
-- A serial connection to the telemetry receiver (USB-to-Serial adapter or Pico with UART-to-USB)
+| Component | Part | Interface |
+|-----------|------|-----------|
+| Microcontroller | Raspberry Pi Pico (RP2040) | — |
+| RF Module | nRF24L01+ | SPI1 |
+| IMU | MPU6050 (6-axis accel + gyro) | I2C1 |
+| Magnetometer | QMC5883L (3-axis compass) | I2C1 |
+| Barometer | BMP180 (pressure/altitude) | I2C1 |
+| GPS | Generic UART NMEA module | UART0 |
+| Motor ESC | Brushless ESC (PWM input) | GP28 |
+| Aileron Left Servo | Analog servo | GP26 |
+| Aileron Right Servo | Analog servo | GP27 |
+| Elevator Servo | Analog servo | GP22 |
 
-### Installation
+### Telemetry Receiver Pico
 
-1. Navigate to the project directory:
-   ```bash
-   cd pico_rc_plane
-   ```
+| Component | Part | Interface |
+|-----------|------|-----------|
+| Microcontroller | Raspberry Pi Pico (RP2040) | — |
+| RF Module | nRF24L01+ | SPI0 |
+| PC Link | USB serial (USB-CDC) | USB |
 
-2. Create a Python virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   # Windows
-   venv\Scripts\activate
-   # macOS/Linux
-   source venv/bin/activate
-   ```
+---
 
-3. Install dependencies:
-   ```bash
-   pip install -r desktop_app/requirements.txt
-   ```
+## Subsystem Descriptions
 
-### Running the Ground Station
+### Transmitter Controller
 
-```bash
-python desktop_app/main.py
-```
+**File:** `controller/code.py`  
+**Runtime:** CircuitPython
 
-The application will launch with:
-- **Telemetry Panel**: Live roll, pitch, heading, altitude, GPS position
-- **3D Visualization**: Real-time attitude display (GLWidget)
-- **Map View**: GPS track on folium map
-- **Recording Controls**: Start/stop telemetry recording
-- **Replay Controls**: Load and playback saved CSV flights
-- **Theme Toggle**: Switch between Dark and Light UI modes
+The transmitter implements a three-state machine:
 
-## Embedded Deployment
+| State | Description |
+|-------|-------------|
+| `STATE_MENU` (0) | OLED menu for selecting operating mode |
+| `STATE_FLY` (1) | Wireless RC transmission via NRF24L01 |
+| `STATE_USB` (2) | USB HID gamepad emulation for ground testing |
 
-### Controller (Transmitter Pico)
+In FLY mode, the main loop reads four analog joystick axes and eight digital buttons, packages the data into a 5-byte struct, and transmits at approximately 50 Hz. An ARM switch disables the throttle channel when disarmed, preventing accidental motor starts.
 
-1. Flash **CircuitPython** to the Pico
-2. Copy all files from `controller/` to the Pico drive
-3. Ensure required libraries are installed:
-   - `circuitpython_nrf24l01`
-   - `board`, `busio`, `digitalio`, `analogio`, `keypad`
-4. Run `code.py` (automatically executed on boot)
-5. Use the menu to select flight mode or USB HID mode
+**Joystick Processing:**
+- Raw ADC: 0–65535 (12-bit Pico ADC)
+- Active range: 8000–58000
+- Deadzone: ±2000 units around center (32768)
+- Output: Throttle 0–255, all other axes −127 to +127
 
-### Flight Controller (Main Flight Pico)
+**Trim System:** Dedicated buttons incrementally adjust `trim_roll` and `trim_pitch` offsets that are added to stick values before transmission.
 
-1. Flash **MicroPython** to the Pico
-2. Copy all files from `flight_controller/` (including `lib/` subdirectory) to the Pico filesystem
-3. Connect sensors via I2C1:
-   - MPU6050, QMC5883L, BMP180 on SDA=GP14, SCL=GP15
-   - GPS UART on UART0 (TX=GP12, RX=GP13, 9600 baud)
-4. Connect actuators:
-   - Motor ESC PWM: GP28
-   - Aileron Left Servo: GP26
-   - Aileron Right Servo: GP27
-   - Elevator Servo: GP22
-5. Run `main.py` on the flight Pico (100 Hz control loop begins automatically)
-
-### Telemetry Receiver (Optional Standalone Receiver Pico)
-
-1. Flash **MicroPython** to the Pico
-2. Copy all files from `telemetry_receiver/` to the Pico filesystem
-3. This device receives telemetry packets and can relay them via UART to a ground station
-4. Run `telemetry_receiver/main.py`
-
-## Usage
-
-### Transmitter (Controller)
-
-1. Power on the transmitter Pico
-2. Navigate the menu to select:
-   - **Fly Mode**: Wireless RC control via nRF24L01
-   - **USB Mode**: Emulate a USB HID gamepad for ground testing
-3. Adjust flight mode (Stabilize vs Manual) using physical buttons
-4. Use trim buttons to calibrate stick offsets before flight
-5. Press the ARM switch to arm/disarm the flight controller
+---
 
 ### Flight Controller
 
-1. Power on and ensure all sensors initialize (check I2C, GPS connection)
-2. Wait for magnetometer calibration to complete (20 seconds)
-3. Once armed via transmitter, the flight controller begins stabilization
-4. **Stabilize Mode**: The 100 Hz PID loop maintains level attitude
-   - Roll/Pitch setpoints are mapped from stick input (-80° to +80°)
-   - Control is proportional and damped
-5. **Manual Mode**: Direct stick-to-servo pass-through control
+**File:** `flight_controller/main.py`  
+**Runtime:** MicroPython  
+**CPU:** RP2040 @ 250 MHz
 
-### Ground Station (Desktop App)
+#### Input Processing
 
-1. Connect the telemetry receiver (or flight controller) to a USB serial port
-2. Run `python desktop_app/main.py`
-3. Select the serial port and connect
-4. View live telemetry:
-   - Roll, Pitch, Heading (3D visualization)
-   - Altitude (barometer)
-   - GPS position (map view with folium)
-5. Record telemetry data to CSV (automatically saved to `telemetry_logs/`)
-6. Replay past flights from CSV files
-7. Toggle between Dark and Light UI themes
+The NRF module receives 5-byte RC command packets and exposes four channels as global variables:
 
-## Technical Notes
+| Variable | Type | Range | Control |
+|----------|------|-------|---------|
+| `ch1_rudder` | int8 | −127 to +127 | (unused, future rudder) |
+| `ch2_throttle` | uint8 | 0 to 255 | Motor throttle |
+| `ch3_aileron` | int8 | −127 to +127 | Roll / aileron |
+| `ch4_elevator` | int8 | −127 to +127 | Pitch / elevator |
+| `fly_mode` | uint8 | 0 or 1 | Stabilize / Manual |
 
-### Flight Control
-- **Control Loop**: 100 Hz on flight controller (10 ms per iteration)
-- **Telemetry Output**: ~5 Hz (200 ms between packets)
-- **Attitude Stabilization** (Stabilize Mode):
-  - Roll setpoint: -80° to +80° (mapped from stick input -127 to +127)
-  - Pitch setpoint: -80° to +80°
-  - PID Gains:
-    - Roll: Kp=1.2, Ki=0.2, Kd=0.05
-    - Pitch: Kp=1.0, Ki=0.1, Kd=0.05
-  - Servo Limits: ±30° deflection for aileron and elevator
-- **Throttle Range**: 0-255 (0% to 100%)
+**Failsafe:** If no packet is received for 1000 ms, all channels are zeroed (throttle off, surfaces centered) and `fly_mode` is set to Stabilize.
 
-### Sensor Fusion
-- **IMU**: MPU6050 provides raw accelerometer and gyroscope data
-- **Compass**: QMC5883L provides heading reference
-- **Fusion Algorithm**: Custom 9-DOF Fusion (gyro + accel + mag)
-- **Output**: Roll, Pitch, Heading angles in degrees
+#### Flight Modes
 
-### Wireless Link
-- **Frequency**: 2.4 GHz (ISM band)
-- **Data Rate**: 250 kbps (optimized for range, reduces interference sensitivity)
-- **Latency**: ~4 ms per packet (nRF24L01 SPI transfer time)
-- **Packet Loss Tolerance**: Auto-retransmit disabled for low-latency control
+**Stabilize Mode (fly_mode = 0):**  
+Stick deflection commands a target attitude angle (−80° to +80°). The PID controller computes the servo correction needed to reach and hold that angle. This provides self-leveling behavior — releasing the stick commands 0° (wings level).
 
-### Power Management
-- **Flight Controller CPU**: 250 MHz (configured in main.py)
-- **Motor PWM**: 50 Hz (standard servo/ESC frequency)
-- **GPS**: 9600 baud, non-blocking UART reads (updates only on complete NMEA sentences)
+**Manual Mode (fly_mode = 1):**  
+Stick deflection maps directly to servo position with no attitude feedback. The pilot has direct control analogous to a conventional RC system.
 
-### Telemetry Data Recorded
-- Timestamp (ms since boot)
-- Roll, Pitch, Heading (degrees)
-- Altitude (meters, relative to baseline)
-- GPS Latitude, Longitude (decimal degrees)
-- Flight mode, arm state, sensor health
+#### Motor Control
 
-### Calibration
-- **Magnetometer**: Auto-calibration routine runs on IMU module setup (20 seconds)
-- **Barometer**: Baseline altitude sampled on startup (5 samples averaged)
-- **Joysticks**: Deadzone = 2000 ADC units around center (32768)
+The ESC is driven by a 50 Hz PWM signal on GP28:
 
-## Wiring Reference
+| Throttle Value | Pulse Width | State |
+|---|---|---|
+| 0 | 1.0 ms | Armed, zero thrust |
+| 128 | 1.5 ms | ~50% thrust |
+| 255 | 2.0 ms | Full thrust |
 
-### Controller (Transmitter Pico - CircuitPython)
+#### Servo Control
 
-| Component | Pin | Purpose |
-|-----------|-----|---------|
-| nRF24L01 SCK | GP10 | SPI Clock |
-| nRF24L01 MOSI | GP11 | SPI Data Out |
-| nRF24L01 MISO | GP12 | SPI Data In |
-| nRF24L01 CSN | GP9 | Chip Select |
-| nRF24L01 CE | GP8 | Chip Enable |
-| Joystick 1 X-Axis | GP27 | Analog (0-3.3V) |
-| Joystick 1 Y-Axis | GP29 | Analog (0-3.3V) |
-| Joystick 2 X-Axis | GP28 | Analog (0-3.3V) |
-| Joystick 2 Y-Axis | GP26 | Analog (0-3.3V) |
-| Buttons (8x) | GP3, GP15, GP5, GP6, GP14, GP7, GP4, GP2 | Digital Input |
+Three servos control the flight surfaces. All use 0.5–2.5 ms pulse range (180° physical travel):
+
+| Servo | Pin | Flight Limit |
+|-------|-----|-------------|
+| Aileron Left | GP26 | ±30° |
+| Aileron Right | GP27 | ±30° (mirrored, differential) |
+| Elevator | GP22 | ±30° |
+
+Differential aileron: `aileron_right.value = 1.0 - aileron_left.value` ensures that when the left aileron deflects down, the right deflects up, generating a rolling moment.
+
+---
+
+### Telemetry Receiver
+
+**File:** `telemetry_receiver/main.py`  
+**Runtime:** MicroPython
+
+A minimal Pico dedicated to receiving the 28-byte telemetry packets from the flight controller and printing them as CSV lines to the USB serial port. The desktop app reads these lines at 115200 baud.
+
+**Output format:**
+```
+roll,pitch,heading,altitude,gps_lat,gps_lon,timestamp_ms
+```
+Example: `-1.23,2.45,180.00,12.50,47.150476,27.636506,45230`
+
+---
+
+### Desktop Ground Station
+
+**File:** `desktop_app/main.py`  
+**Runtime:** Python 3.10+, PyQt5
+
+A PyQt5 graphical application providing:
+
+- **Live telemetry display** — numeric readouts for roll, pitch, heading, altitude, and GPS position with colour-coded alerts (amber at warning threshold, red at critical)
+- **2D map view** — GPS flight track rendered on a Leaflet.js map inside a `QWebEngineView`, switchable between OpenStreetMap, Google Satellite, and Google Terrain
+- **Full 3D view** — PyQtGraph OpenGL visualization of the aircraft model (STL) with real attitude applied via Euler rotation
+- **CSV recording** — saves live telemetry to timestamped CSV files in `telemetry_logs/`
+- **Replay system** — loads any saved log and replays it at correct real-time speed (computed from `timestamp_ms` differences between consecutive frames), with timeline slider, speed multiplier (0.5×–4×), and frame-accurate scrubbing
+- **Analytics charts** — altitude and roll/pitch/yaw time-series charts populated on replay load
+
+**Project structure:**
+```
+desktop_app/
+├── main.py               entry point
+├── app/
+│   ├── gcs_window.py     main QMainWindow
+│   ├── core/
+│   │   ├── models.py     TelemetryFrame dataclass
+│   │   ├── serial_reader.py  QThread serial reader
+│   │   └── recorder.py   CSV read/write/list
+│   ├── ui/
+│   │   ├── themes.py     dark and light QSS stylesheets
+│   │   ├── telemetry_panel.py  gauge widgets with alert colouring
+│   │   ├── map_view.py   Leaflet.js map
+│   │   ├── view_3d.py    PyQtGraph 3D view
+│   │   └── charts.py     pyqtgraph analytics
+│   └── utils/
+│       └── stl_loader.py STL mesh loader
+└── requirements.txt
+```
+
+---
+
+## Wireless Communication Protocol
+
+### NRF24L01 Common Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Frequency band | 2.4 GHz ISM |
+| RF channel | 108 (2508 MHz) |
+| Data rate | 250 kbps |
+| Output power | 0 dBm (MAX) |
+| Payload size | 28 bytes (fixed) |
+| Auto-ACK | Disabled |
+| CRC | 2 bytes |
+
+### RC Command Packet — Transmitter → Flight Controller
+
+**TX address:** `b"node2"` | **RX address:** `b"node2"`
+
+```python
+struct.pack("<bBbbB", ch1_rudder, ch2_throttle, ch3_aileron, ch4_elevator, fly_mode)
+```
+
+| Field | C Type | Range | Description |
+|-------|--------|-------|-------------|
+| ch1_rudder | int8 | −127 to +127 | Channel 1 (unused) |
+| ch2_throttle | uint8 | 0 to 255 | Throttle |
+| ch3_aileron | int8 | −127 to +127 | Roll command |
+| ch4_elevator | int8 | −127 to +127 | Pitch command |
+| fly_mode | uint8 | 0 or 1 | 0 = Stabilize, 1 = Manual |
+
+Total: 5 bytes active. Remaining 23 bytes are padding to reach the fixed 28-byte payload.
+
+### Telemetry Packet — Flight Controller → Telemetry Receiver
+
+**TX address:** `b"node3"` | **RX address:** `b"node3"`
+
+```python
+struct.pack("<ffffffI",
+    roll, pitch, heading,
+    relative_altitude,
+    gps_lat, gps_lon,
+    timestamp_ms)
+```
+
+| Field | C Type | Unit | Description |
+|-------|--------|------|-------------|
+| roll | float32 | degrees | Bank angle (−180 to +180) |
+| pitch | float32 | degrees | Pitch angle (−90 to +90) |
+| heading | float32 | degrees | Magnetic heading (0 to 360) |
+| relative_altitude | float32 | metres | Altitude above takeoff point |
+| gps_lat | float32 | decimal degrees | Latitude |
+| gps_lon | float32 | decimal degrees | Longitude |
+| timestamp_ms | uint32 | milliseconds | Time since boot |
+
+Total: 6 × 4 + 4 = **28 bytes** exactly.
+
+---
+
+## Flight Control Algorithm (PID)
+
+### Overview
+
+The Stabilize flight mode uses two independent PID controllers — one for roll (aileron axis) and one for pitch (elevator axis). Each controller computes a servo correction signal in the range −127 to +127.
+
+### Signal Chain
+
+```
+RC Stick (−127…+127)
+        │
+        ▼
+  map_to_angle()          linear map: −127…+127 → −80°…+80°
+        │
+        ▼
+  Target Angle (°)
+        │
+        ├─────────────────────────────────┐
+        │                                 │
+   setpoint                           measurement
+        │                          (IMU fusion roll/pitch)
+        └──────────► PID.compute() ◄─────┘
+                          │
+                          ▼
+                  Servo Command (−127…+127)
+                          │
+                          ▼
+               servo_control.set_aileron()
+```
+
+### PID Implementation
+
+The controller implements **derivative-on-measurement** and **integral anti-windup**:
+
+```python
+# Proportional
+p = Kp × error
+
+# Integral with clamping (anti-windup)
+integral += error × dt
+integral  = clamp(integral, −integral_max, +integral_max)
+I = Ki × integral
+
+# Derivative on measurement (no derivative kick on setpoint change)
+raw_d    = −(measurement − prev_measurement) / dt
+d_filtered = α × raw_d + (1−α) × prev_d_filtered   # low-pass filter
+D = Kd × d_filtered
+
+output = clamp(P + I + D, −127, +127)
+```
+
+**Derivative-on-measurement** computes the derivative of the sensor reading rather than the error. When the pilot moves the stick, the setpoint changes instantaneously — computing the derivative of the error would produce a large spike (derivative kick). Since the measured angle changes smoothly, the derivative of the measurement remains bounded.
+
+**Integral anti-windup** limits the accumulated integral to ±40 (separate from the output limits of ±127). This prevents the integrator from saturating the output when the aircraft is held in a sustained error state (e.g., during a large attitude change).
+
+**Derivative low-pass filter** with coefficient α = 0.4 reduces the amplification of IMU quantization noise by the kd gain.
+
+### Tuned Parameters
+
+| Axis | Kp | Ki | Kd | integral_max | d_alpha |
+|------|----|----|-----|-------------|---------|
+| Roll | 1.2 | 0.2 | 0.05 | 40 | 0.4 |
+| Pitch | 1.0 | 0.1 | 0.05 | 40 | 0.4 |
+
+---
+
+## Sensor Fusion
+
+### IMU — MPU6050
+
+The MPU6050 provides 6-axis inertial data at up to 1 kHz. At the 100 Hz control loop rate, it supplies:
+- 3-axis accelerometer (g-force, used to determine tilt via gravity vector)
+- 3-axis gyroscope (deg/s, used for angular rate integration)
+
+### Magnetometer — QMC5883L
+
+The QMC5883L provides 3-axis magnetic field measurements used to compute absolute heading (0°–360°). A 20-second calibration routine at startup rotates the aircraft through a figure-8 pattern to determine hard-iron and soft-iron offsets.
+
+### Sensor Fusion Algorithm
+
+The Mahony/Madgwick-style 9-DOF fusion algorithm (`lib/fusion.py`) combines accelerometer, gyroscope, and magnetometer data to produce drift-free roll, pitch, and heading angles:
+- **Gyroscope integration** provides fast, low-noise short-term angle tracking
+- **Accelerometer** provides a gravity reference to correct gyroscope drift in roll and pitch
+- **Magnetometer** provides an Earth's magnetic field reference to correct heading drift
+
+### Barometer — BMP180
+
+Relative altitude is computed from atmospheric pressure. A 5-sample baseline is averaged at startup. Subsequent readings are smoothed with an IIR low-pass filter:
+
+```
+altitude_filtered = 0.9 × altitude_prev + 0.1 × altitude_raw
+```
+
+This update runs at 20 Hz (every 5th control loop iteration) to stay within the BMP180's maximum conversion rate.
+
+---
+
+## Installation and Setup
+
+### Prerequisites
+
+- Python 3.10 or higher
+- Two Raspberry Pi Pico boards (one for transmitter, one for flight controller)
+- One additional Pico for the dedicated telemetry receiver (optional)
+
+### Desktop Application
+
+```bash
+cd desktop_app
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+python main.py
+```
+
+**Dependencies:** `PyQt5`, `PyQtWebEngine`, `pyqtgraph`, `PyOpenGL`, `numpy`, `numpy-stl`, `pyserial`
+
+### Transmitter (Controller Pico)
+
+1. Flash **CircuitPython** to the Pico
+2. Copy all files from `controller/` to the Pico drive
+3. Install CircuitPython libraries: `circuitpython_nrf24l01`, `adafruit_ssd1306`, `adafruit_ina219`
+4. `code.py` runs automatically on boot
+
+### Flight Controller Pico
+
+1. Flash **MicroPython** (v1.20+) to the Pico
+2. Copy `flight_controller/` files and `lib/` directory to the Pico filesystem
+3. Connect sensors to I2C1 (SDA=GP14, SCL=GP15)
+4. Connect GPS UART to UART0 (RX=GP13)
+5. `main.py` runs automatically on boot (100 Hz loop starts immediately)
+
+### Telemetry Receiver Pico
+
+1. Flash **MicroPython** to the Pico
+2. Copy `telemetry_receiver/` files and `lib/` directory to the Pico
+3. `main.py` runs automatically on boot; telemetry appears as CSV on USB serial
+
+---
+
+## Pin Reference
+
+### Transmitter Pico (CircuitPython)
+
+| Signal | Pin | Notes |
+|--------|-----|-------|
+| NRF24L01 SCK | GP10 | SPI0 |
+| NRF24L01 MOSI | GP11 | SPI0 |
+| NRF24L01 MISO | GP12 | SPI0 |
+| NRF24L01 CSN | GP9 | — |
+| NRF24L01 CE | GP8 | — |
+| Joystick 1 X | GP27 | ADC |
+| Joystick 1 Y | GP29 | ADC |
+| Joystick 2 X | GP28 | ADC |
+| Joystick 2 Y | GP26 | ADC |
+| 8× Buttons | GP2–GP7, GP14, GP15 | Digital in |
 
 ### Flight Controller Pico (MicroPython)
 
-| Component | Pin(s) | Purpose |
-|-----------|--------|---------|
-| nRF24L01 SCK | GP18 | SPI Clock |
-| nRF24L01 MOSI | GP19 | SPI Data Out |
-| nRF24L01 MISO | GP16 | SPI Data In |
-| nRF24L01 CSN | GP17 | Chip Select |
-| nRF24L01 CE | GP20 | Chip Enable |
-| Motor ESC PWM | GP28 | Throttle Control |
-| Aileron Left Servo | GP26 | PWM Signal |
-| Aileron Right Servo | GP27 | PWM Signal |
-| Elevator Servo | GP22 | PWM Signal |
-| I2C SDA (Sensors) | GP14 | IMU, Compass, Barometer |
-| I2C SCL (Sensors) | GP15 | IMU, Compass, Barometer |
-| GPS TX | GP12 | UART0 RX (9600 baud) |
-| GPS RX | GP13 | UART0 TX (9600 baud) |
+| Signal | Pin | Notes |
+|--------|-----|-------|
+| NRF24L01 SCK | GP18 | SPI1 |
+| NRF24L01 MOSI | GP19 | SPI1 |
+| NRF24L01 MISO | GP16 | SPI1 |
+| NRF24L01 CSN | GP17 | — |
+| NRF24L01 CE | GP20 | — |
+| IMU/Compass/Baro SDA | GP14 | I2C1 |
+| IMU/Compass/Baro SCL | GP15 | I2C1 |
+| GPS UART RX | GP13 | UART0 |
+| GPS UART TX | GP12 | UART0 |
+| Motor ESC PWM | GP28 | 50 Hz PWM |
+| Aileron Left | GP26 | 50 Hz PWM |
+| Aileron Right | GP27 | 50 Hz PWM |
+| Elevator | GP22 | 50 Hz PWM |
 
 ### Sensor I2C Addresses
 
-- **MPU6050**: 0x68 (default, can be 0x69 if AD0 pin pulled high)
-- **QMC5883L**: 0x0D
-- **BMP180**: 0x77
+| Sensor | Address |
+|--------|---------|
+| MPU6050 | 0x68 |
+| QMC5883L | 0x0D |
+| BMP180 | 0x77 |
+
+### Telemetry Receiver Pico (MicroPython)
+
+| Signal | Pin | Notes |
+|--------|-----|-------|
+| NRF24L01 SCK | GP2 | SPI0 |
+| NRF24L01 MOSI | GP3 | SPI0 |
+| NRF24L01 MISO | GP4 | SPI0 |
+| NRF24L01 CSN | GP1 | — |
+| NRF24L01 CE | GP0 | — |
 
 ---
 
-## Troubleshooting
+## Technical Specifications
 
-### nRF24L01 Connection Issues
-
-- **No communication**: Verify SPI pin mappings and power supply (nRF24L01 requires stable 3.3V with capacitor)
-- **Intermittent packets**: Check antenna orientation and use external antenna version for improved range
-- **Slow data rate**: Reduce payload size or increase TX power (current setting is 250 kbps for range)
-
-### Sensor Initialization Failures
-
-- **I2C errors**: Verify pull-up resistors (typically 4.7k Ω on SDA/SCL) and sensor addresses with `i2c_scan.py`
-- **GPS no signal**: Check UART baud rate (9600) and NMEA sentence format compatibility
-- **Magnetometer calibration timeout**: Rotate the aircraft in figure-8 pattern during initial 20-second calibration
-
-### Flight Control Issues
-
-- **Aircraft won't stabilize**: Verify PID gains and servo limits; check motor/servo connections for backward polarity
-- **Erratic attitude readings**: Ensure IMU is mounted level and magnetometer has no metal interference
-- **GPS position drift**: Allow 20+ second GPS lock-in period after power-up; avoid flying near large metal structures
-
-### Desktop App Connection Issues
-
-- **Serial port not detected**: Verify USB driver installation and check COM port in Device Manager
-- **Telemetry data frozen**: Check baud rate (typically 115200 for UART-to-USB adapter) and packet format
-- **3D visualization lag**: Reduce plot update frequency or close background applications
+| Parameter | Value |
+|-----------|-------|
+| Control loop frequency | 100 Hz |
+| Servo/ESC PWM frequency | 50 Hz |
+| IMU update rate | 100 Hz |
+| Barometer update rate | 20 Hz |
+| GPS baud rate | 9600 baud (NMEA) |
+| Telemetry output rate | 5 Hz |
+| RF link latency | ~4 ms (SPI transfer) |
+| RF channel | 108 (2508 MHz) |
+| RF data rate | 250 kbps |
+| RF payload size | 28 bytes (fixed) |
+| Stick-to-angle mapping | ±127 stick → ±80° |
+| Servo travel limit | ±30° (aileron and elevator) |
+| Throttle range | 0–255 → 1.0–2.0 ms PWM |
+| Failsafe timeout | 1000 ms |
+| Desktop GCS update rate | 5 Hz (serial), 10 Hz (map), 60 Hz (3D) |
 
 ---
 
-## Performance Metrics
+## Known Limitations
 
-- **Radio Latency**: ~4 ms (SPI transfer + processing)
-- **Control Loop Rate**: 100 Hz (10 ms cycle)
-- **Attitude Response Time**: ~200 ms (depends on PID tuning and air disturbance)
-- **GPS Update Rate**: Depends on module (typically 1-5 Hz)
-- **Telemetry Bandwidth**: ~168 bytes/sec @ 5 Hz telemetry + 28 bytes/sec commands = ~196 bytes/sec
-
----
-
-## License
-
-This repository does not include a license file. Add a license if you intend to share or publish the project.
-
-
+- **GPS accuracy:** float32 provides ~6 significant digits of coordinate precision, sufficient for visual tracking but not survey-grade positioning. GPS has no lock indicator in telemetry — `lat=0.0, lon=0.0` is transmitted until a valid NMEA fix is obtained.
+- **Magnetometer heading:** Subject to magnetic interference from the motor, ESC, and battery. Positioning the compass away from high-current conductors is required for reliable heading data.
+- **Single-axis PID:** Roll and pitch are controlled independently. Cross-coupling between axes (e.g., rudder-roll interaction) is not compensated.
+- **No airspeed sensing:** The PID gains are tuned for a nominal airspeed. At very low or high airspeeds, control authority changes and the PID response will differ from the tuned behavior.
+- **Barometric altitude:** Sensitive to local weather pressure changes. The baseline is sampled at startup; a pressure change of 1 hPa corresponds to approximately 8.5 m of apparent altitude change.
+- **No return-to-home:** Loss of signal activates failsafe (throttle off, surfaces neutral) rather than autonomous return.

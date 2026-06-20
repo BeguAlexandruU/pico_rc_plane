@@ -33,16 +33,16 @@ setup()
 last_time = utime.ticks_us()
 while True:
     
-    # # 1. Calculate Delta Time
-    # current_time = utime.ticks_us()
-    # # ticks_diff handles the internal counter wrap-around
-    # dt = utime.ticks_diff(current_time, last_time) / 1_000_000 
-    # last_time = current_time
+    # 1. Calculate Delta Time
+    current_time = utime.ticks_us()
+    # ticks_diff handles the internal counter wrap-around
+    dt = utime.ticks_diff(current_time, last_time) / 1_000_000 
+    last_time = current_time
     
-    # # Avoid division by zero
-    # if dt > 0:
-    #     frequency = 1 / dt
-    #     print(f"Freq: {frequency:.2f} Hz", end="\r")
+    # Avoid division by zero
+    if dt > 0:
+        frequency = 1 / dt
+        print(f"Freq: {frequency:.2f} Hz", end="\r")
 
 
     start_tick = utime.ticks_us()

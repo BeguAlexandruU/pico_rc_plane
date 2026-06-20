@@ -12,17 +12,17 @@ class PID:
         self.kd = kd
         self._limits = output_limits
 
-        self._last_error = 0
-        self._last_input = 0
-        self._last_output = 0
+        self.last_error = 0
         self._integral = 0
-        self._last_time = time.ticks_ms()
+        self.last_time = time.ticks_ms()
+
+    def reset_integral(self):
+        self._integral = 0
 
     def compute(self, setpoint, actual):
         now = time.ticks_ms()
-        dt = time.ticks_diff(now, self._last_time) / 1000.0
-        if dt <= 0.001: 
-            return self._last_output 
+        dt = time.ticks_diff(now, self.last_time) / 1000.0
+        if dt <= 0: return self.last_error # Prevent division by zero
 
         error = setpoint - actual
         
@@ -34,26 +34,16 @@ class PID:
         self._integral = max(self._limits[0], min(self._limits[1], self._integral))
         
         # Derivative
-        d = self.kd * (error - self._last_input) / dt
+        d = self.kd * (error - self.last_error) / dt
         
         output = p + self._integral + d
         
         # Apply limits (-127 to 127)
         output = max(self._limits[0], min(self._limits[1], output))
         
-        self._last_error = error
-        self._last_time = now
-        self._last_output = output
-        self._last_input = actual
+        self.last_error = error
+        self.last_time = now
         return output
-
-    def reset_integral(self):
-        self._integral = 0
-
-    def reset(self):
-        self._integral = 0
-        self._last_input = 0
-        self._last_time = time.ticks_ms()
 
 
 ROLL_SLOPE = (80 - (-80)) / (127 - (-127))
@@ -62,8 +52,8 @@ pitch_pid = None
 
 def setup():
     global roll_pid, pitch_pid
-    roll_pid = PID(kp=1.2, ki=0.2, kd=0.05, output_limits=(-127, 127))
-    pitch_pid = PID(kp=1.0, ki=0.1, kd=0.05, output_limits=(-127, 127))
+    roll_pid = PID(kp=1.2, ki=0, kd=0.05, output_limits=(-127, 127))
+    pitch_pid = PID(kp=1.0, ki=0, kd=0.05, output_limits=(-127, 127))
 
 def map_input_to_angle(x):
     # Simplified Formula: (x - in_min) * slope + out_min

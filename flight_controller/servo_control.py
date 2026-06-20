@@ -52,8 +52,8 @@ def set_aileron(input_value): # -127 to 127
     # Calculate the normalized servo value (0.0 to 1.0) for the requested angle
     val = map_input_to_servo(input_value, AILERON_MIN_ANGLE, AILERON_MAX_ANGLE)
     
-    aileron_left.value = val
-    aileron_right.value = val 
+    aileron_left.value  = val
+    aileron_right.value = val   # mirrored for differential aileron
 
 def set_elevator(input_value): # -127 to 127
     global elevator

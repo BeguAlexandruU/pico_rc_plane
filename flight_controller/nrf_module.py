@@ -101,12 +101,11 @@ def update():
             print("Failed to send telemetry")
         nrf.start_listening()
 
-    # FAILSAFE: If no packet for 1000ms
+    # FAILSAFE: If no packet for 1000ms, zero all commands
     if utime.ticks_diff(current_time, last_packet_time) > 1000:
-        # print("!!! FAILSAFE ACTIVE - SIGNAL LOST !!!")
         ch1_rudder = 0
         ch2_throttle = 0
-        ch3_aileron = 10
+        ch3_aileron = 0
         ch4_elevator = 0
         fly_mode = 0
 
