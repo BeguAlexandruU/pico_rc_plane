@@ -19,7 +19,7 @@ class PID:
     def reset_integral(self):
         self._integral = 0
 
-    def compute(self, setpoint, actual):
+    def compute(self, setpoint, actual, print_debug=False):
         now = time.ticks_ms()
         dt = time.ticks_diff(now, self.last_time) / 1000.0
         if dt <= 0: return self.last_error # Prevent division by zero
@@ -43,6 +43,9 @@ class PID:
         
         self.last_error = error
         self.last_time = now
+
+        if print_debug:
+            print(f"PID Compute | Setpoint: {setpoint:.2f}, Actual: {actual:.2f}, Error: {error:.2f}, P: {p:.2f}, I: {self._integral:.2f}, D: {d:.2f}, Output: {output:.2f}")
         return output
 
 
@@ -77,7 +80,7 @@ def update():
         # The PID returns a value in the -127 to 127 range for your servo_control
         aileron_output = roll_pid.compute(target_roll, -current_roll)
         elevator_output = pitch_pid.compute(target_pitch, current_pitch)
-        
+
         servo_control.set_aileron(aileron_output)
         servo_control.set_elevator(-elevator_output)
 
