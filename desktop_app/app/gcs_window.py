@@ -27,7 +27,7 @@ _SPEED_MAP  = {"0.5x": 2.0, "1.0x": 1.0, "2.0x": 0.5, "4.0x": 0.25}
 class GCSWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Drone Ground Control Station & Flight Reconstructor")
+        self.setWindowTitle("Ground Control Station")
         self.resize(1500, 950)
 
         self._recorder = Recorder(_LOG_FOLDER)

@@ -34,8 +34,8 @@ The system consists of four interconnected components operating across two physi
 │  (CircuitPython)│  RC commands     │    (MicroPython)     │
 │  Raspberry Pi   │  28 bytes/packet │   Raspberry Pi Pico  │
 │  Pico           │                  │                      │
-│                 │ ◄─────────────── │  IMU + GPS + Baro    │
-└─────────────────┘  telemetry 5 Hz  │  Servos + ESC        │
+│                 │                  │  IMU + GPS + Baro    │
+└─────────────────┘                  │  Servos + ESC        │
                                      └──────────┬───────────┘
                                                 │ telemetry
                                                 │ (NRF24L01)

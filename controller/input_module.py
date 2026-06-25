@@ -16,7 +16,7 @@ DEADZONE = 2000  # Deadzone around center
 #     |   [LB]           [RB]  |
 #     |________________________|
 #     |   [sw_arm]             |
-#     |  [ay1]  [A][B]  [ay1]  |
+#     |  [ay1]  [A][B]  [ay2]  |
 #     | ^>[ax1]    [C] ^>[ax2] |
 #     |________________________|
 #  
@@ -51,15 +51,14 @@ def setup():
     keys = keypad.Keys(buttons, value_when_pressed=False, pull=True)
 
 def map_axis(raw_val, v_min, v_max, out_min=-127, out_max=127):
-    # 1. Clip the value to the physical bounds
+    # Limitare la domeniul fizic
     raw_val = max(v_min, min(v_max, raw_val))
     
-    # 2. Check for deadzone around center
+    # zona moartă în jurul valorii centrale
     if abs(raw_val - CENTER_VAL) < DEADZONE:
         return (out_min + out_max) // 2
         
-    # 3. Linear Mapping Formula
-    # (val - in_min) * (out_range) / (in_range) + out_min
+    # Maparea liniară a valorii brute la intervalul de ieșire
     mapped = (raw_val - v_min) * (out_max - out_min) / (v_max - v_min) + out_min
     return int(mapped)
 
