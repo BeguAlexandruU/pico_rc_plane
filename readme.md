@@ -54,6 +54,56 @@ The system consists of four interconnected components operating across two physi
                                      └──────────────────────┘
 ```
 
+**Project structure:**
+
+```
+pico_rc_plane/
+├── transmitter/
+│   ├── code.py                 
+│   ├── boot.py
+│   ├── state_control.py        mașină de stări MENU / FLY / USB
+│   ├── input_module.py         citire joystickuri și butoane
+│   ├── menu_module.py          interfață OLED SSD1306
+│   ├── rc_controller.py        serializare și transmisie RF
+│   ├── usb_hid_gamepad.py      emulare gamepad USB-HID
+│   ├── hid_gamepad.py
+│   └── test/
+├── desktop_app/
+│   ├── main.py                 
+│   ├── app/
+│   │   ├── gcs_window.py       fereastra principală QMainWindow
+│   │   ├── core/
+│   │   │   ├── models.py       TelemetryFrame dataclass
+│   │   │   ├── serial_reader.py  cititor serial pe QThread
+│   │   │   └── recorder.py     înregistrare și redare CSV
+│   │   ├── ui/
+│   │   │   ├── themes.py       stiluri QSS dark/light
+│   │   │   ├── telemetry_panel.py  indicatoare cu praguri de alertă
+│   │   │   ├── map_view.py     hartă Leaflet.js
+│   │   │   ├── view_3d.py      vizualizare 3D PyQtGraph
+│   │   │   └── charts.py       grafice telemetrie pyqtgraph
+│   │   └── utils/
+│   │       └── stl_loader.py   încărcare mesh STL
+│   ├── plane_models/
+│   │   └── pico_plane.stl
+│   ├── telemetry_logs/
+│   ├── test/
+│   └── requirements.txt
+├── flight_controller/
+│   ├── lib/                    drivere: nRF24L01+, fuziune IMU, OLED
+│   ├── main.py                 
+│   ├── imu_module.py           citire GY-87, fuziune Madgwick
+│   ├── gps_module.py           parser NMEA neblocant (NEO-6M)
+│   ├── pid_controller.py       buclele de control PID
+│   ├── servo_control.py        control servomotor
+│   ├── motor_control.py        control ESC
+│   └── nrf_module.py           recepție comenzi de control și transmisie telemetrie
+└── telemetry_receiver/
+    ├── lib/                    drivere: nRF24L01+
+    ├── main.py                 
+    └── nrf_module.py
+```
+
 ---
 
 ## Architecture
