@@ -1,25 +1,4 @@
-"""
-Generator de telemetrie sintetica pentru testarea aplicatiei desktop (statia de sol).
 
-Emite, pe portul serial, cadre CSV in exact formatul protocolului real produs de
-receptorul de telemetrie:
-
-    roll, pitch, heading, altitude, lat, lon, timestamp_ms
-
-Spre deosebire de o simpla emisie de valori sinusoidale, generatorul simuleaza o
-traiectorie de zbor verosimila: decolare cu urcare, viraje coordonate (ruliu corelat cu
-variatia directiei), oscilatii usoare de tangaj si o deplasare GPS de-a lungul unui
-circuit in jurul punctului de referinta. Astfel pot fi validate, fara hardware radio:
-panoul numeric, harta 2D, vizualizarea 3D, inregistrarea/redarea si graficele de analiza.
-
-Utilizare:
-    python test_generator.py [PORT] [--baud 115200] [--rate 50] [--duration 0]
-
-    PORT       portul serial (implicit COM10). Pe Linux/macOS: /dev/ttyUSB0, etc.
-    --baud     viteza portului serial (implicit 115200, ca in aplicatie)
-    --rate     frecventa de emisie in Hz (implicit ~50 Hz)
-    --duration durata in secunde; 0 = ruleaza pana la Ctrl+C (implicit 0)
-"""
 
 import argparse
 import math
@@ -27,16 +6,14 @@ import sys
 import time
 
 try:
-    import serial  # pyserial
+    import serial  
 except ImportError:
     sys.exit("Lipseste pyserial. Instaleaza cu:  pip install pyserial")
 
 
-# Coordonate de referinta (Iasi) - acelasi punct ca in datele reale
 BASE_LAT = 47.150476
 BASE_LON = 27.636506
 
-# Conversii grosiere grade <-> metri la latitudinea Iasiului
 M_PER_DEG_LAT = 111_320.0
 M_PER_DEG_LON = 111_320.0 * math.cos(math.radians(BASE_LAT))
 
