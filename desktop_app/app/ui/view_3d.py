@@ -57,7 +57,7 @@ class Full3DView(QWidget):
         dz = altitude / 10.0
 
         self._plane.resetTransform()
-        self._plane.rotate(-yaw,   0, 0, 1)
+        # self._plane.rotate(-yaw,   0, 0, 1)
         self._plane.rotate(roll,   0, 1, 0)
         self._plane.rotate(-pitch, 1, 0, 0)
         self._plane.translate(dx, dy, dz)
