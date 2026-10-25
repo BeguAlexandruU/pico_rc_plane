@@ -86,11 +86,16 @@ def update():
 
         motor_control.set_throttle(nrf_module.ch2_throttle)
     else:  # Manual Mode
-        servo_control.set_aileron(nrf_module.ch3_aileron)
-        servo_control.set_elevator(-nrf_module.ch4_elevator)
+        
+        target_roll = map_input_to_angle(nrf_module.ch3_aileron)
+        target_pitch = map_input_to_angle(nrf_module.ch4_elevator)
+        
+        servo_control.set_aileron(target_roll)
+        servo_control.set_elevator(-target_pitch)
         motor_control.set_throttle(nrf_module.ch2_throttle)
 
     # print(f"Target Roll: {target_roll:.1f} | Current Roll: {current_roll:.1f} | Aileron Output: {aileron_output:.1f}")
+
 
 
 

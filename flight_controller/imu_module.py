@@ -29,6 +29,7 @@ def setup():
 
     # calibrate magnetometer
     mag_calibrated = False
+    start_cal_time = time.ticks_ms()
     calibrate_mag()  
 
     # BMP180 setup
